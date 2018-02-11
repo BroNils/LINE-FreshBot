@@ -282,19 +282,19 @@ function botKeyword(ops) {
     sqbot.getSquareMessage(ops, (res) => {
         if (res.msg && res.msg !== 'undefined') {
             let message = res.msg;
-            if (res.txt == 'help') {
+            if (res.txt == '.help') {
                 sqbot.squareSendMessage(Tcustom.square, message, '#Keyword\n\n\
-- Help\n\
-- Myid\n\
-- Creator\n\
-- Time');
+- .help\n\
+- .myid\n\
+- .creator\n\
+- .time');
             }
 
-            if (res.txt == 'myid') {
+            if (res.txt == '.myid') {
                 sqbot.squareSendMessage(Tcustom.square, message, 'Your ID: ' + message._from);
             }
 
-            if (res.txt == 'speed') {
+            if (res.txt == '.speed') {
                 const curTime = (Date.now() / 1000);
                 sqbot.squareSendMessage(Tcustom.square, message, 'Please wait...', 0, (err, success) => {
                     const rtime = (Date.now() / 1000);
@@ -303,11 +303,11 @@ function botKeyword(ops) {
                 });
             }
 
-            if (res.txt == 'creator') {
+            if (res.txt == '.creator') {
                 sqbot.squareSendContact(Tcustom.square, message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
             }
 
-            if (res.txt == 'time') {
+            if (res.txt == '.time') {
                 let d = new Date();
                 let xmenit = d.getMinutes().toString().split("");
                 if (xmenit.length < 2) {
@@ -356,6 +356,6 @@ lineLogin(LOGINType, (res) => {
                     sqbot.saveSquareRev(config.sync, config.conToken);
                 }, Tcustom.square, config.conToken, config.sync);
             }
-        }, 800);
+        }, 2500);
     })
 });
