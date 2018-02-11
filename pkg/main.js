@@ -10,8 +10,8 @@ var thrift = require('thrift-http');
 module.exports = {
     /* Usefull thing */
 
-    echo: function(val, callback) {
-        callback(val);
+    echo: function(val) {
+        return val;
     },
 
     isFunction: function(functionToCheck) {
@@ -116,7 +116,7 @@ module.exports = {
         let reqx = new TTypes.LoginRequest();
         console.info(config.Headers);
         unirest.get('https://' + config.LINE_DOMAIN + config.LINE_CERTIFICATE_URL).headers(config.headers).timeout(120000)
-            .end(async (res) => {
+            .end((res) => {
                 reqx.type = 1;
                 reqx.verifier = res.body.result.verifier;
                 xthrift.loginZ(reqx, (err, success) => {
@@ -152,6 +152,16 @@ module.exports = {
 
     /* Square */
 
+    squarePollXync: function(xthrift, conToken, syncToken, subsId = 0, limits = 1) {
+        let reqx = new TTypes.FetchMyEventsRequest();
+        reqx.limit = limits;
+        reqx.syncToken = syncToken;
+        reqx.continuationToken = conToken;
+        reqx.subscriptionId = subsId;
+        let res = xthrift.fetchMyEvents(reqx);
+        return res;
+    },
+
     squarePoll: function(callback, xthrift, conToken, syncToken, subsId = 0, limits = 1) {
         let reqx = new TTypes.FetchMyEventsRequest();
         reqx.limit = limits;
@@ -186,7 +196,7 @@ module.exports = {
                     msg: xmsg,
                     txt: xtxt
                 }
-                //console.info(JSON.stringify(ops.events[0].payload));
+                console.info(JSON.stringify(ops.events[0].payload));
                 callback(xdata);
             }
         }
@@ -198,13 +208,14 @@ module.exports = {
         let sQmsg = new TTypes.SquareMessage();
         sQmsg.message = message;
         sQmsg.fromType = 4;
-        sQmsg.squareMessageRevision = 1;
+        //sQmsg.squareMessageRevision = 1;
         reqx.reqSeq = 0;
         reqx.squareChatMid = message.to;
         reqx.squareMessage = sQmsg;
         try {
             xthrift.sendMessage(reqx, (err, success) => {
                 if (err) throw err;
+                console.info(JSON.stringify(success))
                 if (module.exports.isFunction(callback)) {
                     callback(err, success);
                 }
