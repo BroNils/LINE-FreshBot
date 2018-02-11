@@ -7,6 +7,8 @@ var config = require('./config');
 var thrift = require('thrift-http');
 
 module.exports = {
+	/* Usefull thing */
+	
     echo: function(val, callback) {
         callback(val);
     },
@@ -92,6 +94,8 @@ module.exports = {
         ))
     },
 	
+	/* Auth */
+	
 	getRSAKeyInfo: function(provider, xthrift, callback){
 	    xthrift.getRSAKeyInfo(provider,(err,success)=>{
 			callback(success.keynm, success);
@@ -135,6 +139,8 @@ module.exports = {
         }
         return result;
     },
+	
+	/* Square */
 	
 	squarePoll: function(callback,xthrift,conToken,syncToken,subsId=0,limits=1){
 		//if(typeof config.sync !== 'undefined' && typeof syncToken !== 'undefined'){config.sync = syncToken.toString();}
@@ -193,5 +199,42 @@ module.exports = {
 	    }catch(error){
 	    	console.log(error);
 	    }
+	},
+	
+	squareSendSticker: function(xthrift, squareChatMid, packageId, stickerId){
+		let msg = new TTypes.Message();
+        msg.contentMetadata = {
+            'STKVER': '100',
+            'STKPKGID': packageId,
+            'STKID': stickerId
+        }
+		msg.to = squareChatMid;
+		msg.contentType = 7;
+        return module.exports.squareSendMessage(xthrift, msg, '');
+	},
+	
+	squareSendContact: function(xthrift, squareChatMid, mid){
+		let msg = new TTypes.Message();
+        msg.contentMetadata = {'mid': mid};
+		msg.to = squareChatMid;
+		msg.contentType = 13;
+        return module.exports.squareSendMessage(xthrift, msg, '');
+	},
+	
+	squareSendGift: function(xthrift, squareChatMid, productId, productType){
+		let prod = ['theme','sticker'],xt;
+		let msg = new TTypes.Message();
+		let random = Math.floor(Math.random() * 10) + 0;
+		if(productType == 'sticker'){xt = 'STKPKGID';}else{xt = 'PRDID';}
+        if(prod.indexOf(productType) != -1){
+            msg.contentMetadata = {
+                'MSGTPL': random.toString(),
+                'PRDTYPE': productType.toUpperCase(),
+                xt: productId
+            }
+			msg.to = squareChatMid;
+		    msg.contentType = 9;
+            return module.exports.squareSendMessage(xthrift, msg, '');
+		}
 	}
 }
