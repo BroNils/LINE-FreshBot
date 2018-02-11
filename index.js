@@ -41,6 +41,7 @@ const PinVerifier = require('./pkg/pinVerifier');
 
 /* GLOBAL Var */
 
+var LOGINType = 1; // 0 = CREDENTIAL, 1 = QRCODE #CHANGE YOUR LOGIN TYPE HERE
 var thrift = require('thrift-http');
 var xtes = "getAuthQrcode";
 var fs = require('fs');
@@ -277,8 +278,7 @@ sqbot.restoreSquareRev((res) => {
     }
 });
 
-//CHANGE YOUR LOGIN TYPE HERE
-lineLogin(1, (res) => {
+lineLogin(LOGINType, (res) => {
     if (res == 'FAIL') {
         console.info('> Login type invalid');
         return;
