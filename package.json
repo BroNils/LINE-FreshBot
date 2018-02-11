@@ -1,0 +1,34 @@
+{
+  "name": "square-bot",
+  "version": "1.0.0",
+  "description": "LINE Square Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "s"
+  },
+  "keywords": [
+    "line-bot",
+    "square-bot",
+    "line-bot"
+  ],
+  "author": "GoogleX",
+  "license": "ISC",
+  "dependencies": {
+    "jsonfile": "^4.0.0",
+    "mime": "^2.2.0",
+    "node-bignumber": "^1.2.1",
+    "path": "^0.12.7",
+    "qrcode-terminal": "^0.11.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "thrift": "^0.11.0",
+    "thrift-http": "^1.0.1",
+    "unirest": "^0.5.1",
+    "utf8": "^3.0.0",
+    "util": "^0.10.3"
+  }
+}
