@@ -1,5 +1,5 @@
-# ![LINE](./public/images/small.png) LINE SquareBot
-[![NPM](https://img.shields.io/badge/npm-%3E=%205.5.0-blue.svg)](https://nodejs.org/) [![Node](https://img.shields.io/badge/node-%3E=%208.0.0-brightgreen.svg)](https://nodejs.org/) [![AUR](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/GoogleX133/LINE-WebChat/blob/master/LICENSE) [![LINE](https://img.shields.io/badge/line-%207.18-brightgreen.svg)](http://line.me/) [![Contact Me](https://img.shields.io/badge/chat-on%20line-1bacbc.svg)](http://line.me/ti/p/MB6mnZWbu_) [![Version](https://img.shields.io/badge/alpha-1.0-red.svg)](https://github.com/GoogleX133/LINE-SquareBot)<br><br>
+# ![LINE](https://github.com/GoogleX133/LINE-WebChat/blob/master/public/images/small.png) LINE SquareBot
+[![NPM](https://img.shields.io/badge/npm-%3E=%205.5.0-blue.svg)](https://nodejs.org/) [![Node](https://img.shields.io/badge/node-%3E=%208.0.0-brightgreen.svg)](https://nodejs.org/) [![AUR](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/GoogleX133/LINE-SquareBot/blob/master/LICENSE) [![LINE](https://img.shields.io/badge/line-%207.18-brightgreen.svg)](http://line.me/) [![Contact Me](https://img.shields.io/badge/chat-on%20line-1bacbc.svg)](http://line.me/ti/p/MB6mnZWbu_) [![Version](https://img.shields.io/badge/alpha-1.0-red.svg)](https://github.com/GoogleX133/LINE-SquareBot)<br><br>
 LINE Messaging Web Platform
 
 ----
@@ -8,7 +8,7 @@ PAGES
 =====
 
 - [What is LINE SquareBot ?](#what-is-line-squarebot-)
-    - [Features](#features)
+    - [Keyword](#keyword)
     - [Upcoming Feature](#upcoming-update)
 - [Requirement](#requirement)
 - [Installation](#)
@@ -16,7 +16,6 @@ PAGES
     - [Linux](#linux-installation)
     - [Termux](#linux-installation)
 - [How to run](#how-to-run)
-- [Guide](#guide)
 
 
 ## What is LINE SquareBot ?
