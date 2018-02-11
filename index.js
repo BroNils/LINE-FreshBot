@@ -255,6 +255,8 @@ function lineLogin(type = 1, callback) {
     }
 }
 
+/* Edit your keyword here */
+
 function botKeyword(ops) {
     sqbot.getSquareMessage(ops, (res) => {
         if (res.msg && res.msg !== 'undefined') {
@@ -265,6 +267,8 @@ function botKeyword(ops) {
         }
     })
 }
+
+/*---------------------------------------------------------------------------*/
 
 sqbot.restoreSquareRev((res) => {
     if (res != 'error') {
