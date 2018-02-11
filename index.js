@@ -356,6 +356,6 @@ lineLogin(LOGINType, (res) => {
                     sqbot.saveSquareRev(config.sync, config.conToken);
                 }, Tcustom.square, config.conToken, config.sync);
             }
-        }, 1000);
+        }, 800);
     })
 });
