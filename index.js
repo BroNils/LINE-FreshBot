@@ -1,6 +1,6 @@
 /*
 
-| [ LINE Web Chat - by GoogleX ]
+| [ LINE SquareBot - by GoogleX ]
 | 
 | Special thanks to:
 |  - StackoverFlow
@@ -23,6 +23,9 @@ console.info("\n\
 console.info("\nNOTE : This project is made by @GoogleX !\n\
 ***Copyright belongs to the author***\n\n\n\n");
 
+/*Change This*/
+var LOGINType = 1; // 0 = CREDENTIAL, 1 = QRCODE, 2 = AuthToken #CHANGE YOUR LOGIN TYPE HERE
+
 /* Const variable */
 
 const unirest = require('unirest');
@@ -41,7 +44,6 @@ const PinVerifier = require('./pkg/pinVerifier');
 
 /* GLOBAL Var */
 
-var LOGINType = 1; // 0 = CREDENTIAL, 1 = QRCODE #CHANGE YOUR LOGIN TYPE HERE
 var thrift = require('thrift-http');
 var xtes = "getAuthQrcode";
 var fs = require('fs');
@@ -204,9 +206,10 @@ function credLogin(id, password, callback) {
                                 reqx.type = 1;
                                 reqx.verifier = res.body.result.verifier;
                                 TauthService.loginZ(reqx, (err, success) => {
-                                    options.path = config.LINE_COMMAND_PATH;
+                                    options.path = config.LINE_POLL_URL;
                                     setTHttpClient(options);
-                                    //config.tokenn = success.authToken;
+                                    config.tokenn = success.authToken;
+                                    console.info('> AuthToken: ' + res.authToken);
                                     sqbot.checkLoginResultType(success.type, success);
                                     callback(success);
                                 })
@@ -226,11 +229,15 @@ function lineLogin(type = 1, callback) {
     Login Type
     0 = CREDENTIAL
     1 = QR
+    2 = Token
     */
 
     //INSERT YOUR CREDENTIAL HERE (IF YOU ARE USING type=0)
     let email = '';
     let password = '';
+
+    //INSERT YOUR AUTHTOKEN HERE(IF YOU ARE USING type=2)
+    let authToken = '';
 
     switch (type) {
         case 0:
@@ -246,10 +253,23 @@ function lineLogin(type = 1, callback) {
                     small: true
                 });
                 qrLogin(verifier, (res) => {
+                    console.info('> AuthToken: ' + res.authToken);
                     console.info('> Login Success');
+                    options.path = config.LINE_POLL_URL;
+                    setTHttpClient(options);
                     callback(res);
                 })
             })
+            break;
+        case 2:
+            config.tokenn = authToken;
+            options.headers['X-Line-Access'] = authToken;
+            options.path = config.LINE_POLL_URL;
+            setTHttpClient(options);
+            let xdata = {
+                authToken: authToken
+            }
+            callback(xdata);
             break;
         default:
             callback('FAIL');
@@ -263,8 +283,40 @@ function botKeyword(ops) {
         if (res.msg && res.msg !== 'undefined') {
             let message = res.msg;
             if (res.txt == 'help') {
-                sqbot.squareSendMessage(Tcustom.square, message, 'Im ready !');
+                sqbot.squareSendMessage(Tcustom.square, message, '#Keyword\n\n\
+- Help\n\
+- Myid\n\
+- Creator\n\
+- Time');
             }
+
+            if (res.txt == 'myid') {
+                sqbot.squareSendMessage(Tcustom.square, message, 'Your ID: ' + message._from);
+            }
+
+            if (res.txt == 'speed') {
+                const curTime = (Date.now() / 1000);
+                sqbot.squareSendMessage(Tcustom.square, message, 'Please wait...', 0, (err, success) => {
+                    const rtime = (Date.now() / 1000);
+                    const xtime = rtime - curTime;
+                    sqbot.squareSendMessage(Tcustom.square, message, xtime + ' seconds')
+                });
+            }
+
+            if (res.txt == 'creator') {
+                sqbot.squareSendContact(Tcustom.square, message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
+            }
+
+            if (res.txt == 'time') {
+                let d = new Date();
+                let xmenit = d.getMinutes().toString().split("");
+                if (xmenit.length < 2) {
+                    sqbot.squareSendMessage(Tcustom.square, message, d.getHours() + ":0" + d.getMinutes());
+                } else {
+                    sqbot.squareSendMessage(Tcustom.square, message, d.getHours() + ":" + d.getMinutes());
+                }
+            }
+
         }
     })
 }
@@ -304,6 +356,6 @@ lineLogin(LOGINType, (res) => {
                     sqbot.saveSquareRev(config.sync, config.conToken);
                 }, Tcustom.square, config.conToken, config.sync);
             }
-        }, 2000);
+        }, 1000);
     })
 });
