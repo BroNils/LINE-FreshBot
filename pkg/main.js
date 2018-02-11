@@ -196,7 +196,7 @@ module.exports = {
                     msg: xmsg,
                     txt: xtxt
                 }
-                console.info(JSON.stringify(ops.events[0].payload));
+                //console.info(JSON.stringify(ops.events[0].payload));
                 callback(xdata);
             }
         }
@@ -215,7 +215,7 @@ module.exports = {
         try {
             xthrift.sendMessage(reqx, (err, success) => {
                 if (err) throw err;
-                console.info(JSON.stringify(success))
+                //console.info(JSON.stringify(success))
                 if (module.exports.isFunction(callback)) {
                     callback(err, success);
                 }
