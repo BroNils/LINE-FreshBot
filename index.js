@@ -25,6 +25,7 @@ console.info("\nNOTE : This project is made by @GoogleX !\n\
 
 /*Change This*/
 var LOGINType = 1; // 0 = CREDENTIAL, 1 = QRCODE, 2 = AuthToken #CHANGE YOUR LOGIN TYPE HERE
+var sqChatMid = ''; //INSERT YOUR SQUARECHATMID HERE
 
 /* Const variable */
 
@@ -282,19 +283,20 @@ function botKeyword(ops) {
     sqbot.getSquareMessage(ops, (res) => {
         if (res.msg && res.msg !== 'undefined') {
             let message = res.msg;
-            if (res.txt == '.help') {
-                sqbot.squareSendMessage(Tcustom.square, message, '#Keyword\n\n\
-- .help\n\
-- .myid\n\
-- .creator\n\
-- .time');
+            if (res.txt == 'help') {
+                sqbot.squareSendMessage(Tcustom.square, message, '~~~~Keyword\n\n\
+- creator\n\
+- help\n\
+- myid\n\
+- speed\n\
+- time');
             }
 
-            if (res.txt == '.myid') {
+            if (res.txt == 'myid') {
                 sqbot.squareSendMessage(Tcustom.square, message, 'Your ID: ' + message._from);
             }
 
-            if (res.txt == '.speed') {
+            if (res.txt == 'speed') {
                 const curTime = (Date.now() / 1000);
                 sqbot.squareSendMessage(Tcustom.square, message, 'Please wait...', 0, (err, success) => {
                     const rtime = (Date.now() / 1000);
@@ -303,11 +305,11 @@ function botKeyword(ops) {
                 });
             }
 
-            if (res.txt == '.creator') {
+            if (res.txt == 'creator') {
                 sqbot.squareSendContact(Tcustom.square, message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
             }
 
-            if (res.txt == '.time') {
+            if (res.txt == 'time') {
                 let d = new Date();
                 let xmenit = d.getMinutes().toString().split("");
                 if (xmenit.length < 2) {
@@ -340,22 +342,26 @@ lineLogin(LOGINType, (res) => {
         console.info('> Success connected to square service');
         setInterval(() => {
             if (config.sync == '' || config.conToken == '') {
-                sqbot.squarePoll((err, success) => {
+                sqbot.squareSingleChatPoll((err, success) => {
+                    //console.info(err)
                     if (err) throw err;
+                    //console.info(success.events[0].payload)
+                    botKeyword(success);
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
-                    botKeyword(success);
                     sqbot.saveSquareRev(config.sync, config.conToken);
-                }, Tcustom.square);
+                }, Tcustom.square, sqChatMid, 0, '', '', 1, 1);
             } else {
-                sqbot.squarePoll((err, success) => {
+                sqbot.squareSingleChatPoll((err, success) => {
+                    //console.info(err)
                     if (err) throw err;
+                    //console.info(success.events[0].payload)
+                    botKeyword(success);
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
-                    botKeyword(success);
                     sqbot.saveSquareRev(config.sync, config.conToken);
-                }, Tcustom.square, config.conToken, config.sync);
+                }, Tcustom.square, sqChatMid, 0, config.sync, config.conToken, 1, 1);
             }
-        }, 2500);
+        }, 800);
     })
 });
