@@ -327,8 +327,13 @@ function botKeyword(ops) {
 
 sqbot.restoreSquareRev((res) => {
     if (res != 'error') {
-        config.sync = res.syncToken;
-        config.conToken = res.continuationToken;
+        if (!sqChatMid || sqChatMid == null) {
+            config.sync = res.default.syncToken;
+            config.conToken = res.default.continuationToken;
+        } else {
+            config.sync = res.sqChatMid.syncToken;
+            config.conToken = res.sqChatMid.continuationToken;
+        }
     }
 });
 
@@ -349,7 +354,7 @@ lineLogin(LOGINType, (res) => {
                     botKeyword(success);
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
-                    sqbot.saveSquareRev(config.sync, config.conToken);
+                    sqbot.saveSquareRev(sqChatMid,config.sync,config.conToken);
                 }, Tcustom.square, sqChatMid, 0, '', '', 1, 1);
             } else {
                 sqbot.squareSingleChatPoll((err, success) => {
@@ -359,7 +364,7 @@ lineLogin(LOGINType, (res) => {
                     botKeyword(success);
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
-                    sqbot.saveSquareRev(config.sync, config.conToken);
+                    sqbot.saveSquareRev(sqChatMid,config.sync,config.conToken);
                 }, Tcustom.square, sqChatMid, 0, config.sync, config.conToken, 1, 1);
             }
         }, 800);
