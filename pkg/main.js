@@ -37,10 +37,18 @@ module.exports = {
         });
     },
 
-    saveSquareRev: function(syncToken, continuationToken) {
-        let xdata = {
-            syncToken: syncToken,
-            continuationToken: continuationToken
+    saveSquareRev: function(sqChatMid = '', syncToken, continuationToken) {
+        let xdata = {}
+        if (!sqChatMid || sqChatMid == null) {
+            xdata['default'] = {
+                syncToken: syncToken,
+                continuationToken: continuationToken
+            }
+        } else {
+            xdata[sqChatMid] = {
+                syncToken: syncToken,
+                continuationToken: continuationToken
+            }
         }
         jsonfile.writeFile('./data/square.json', xdata, function(err) {
             if (err) {
