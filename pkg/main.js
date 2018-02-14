@@ -679,6 +679,71 @@ module.exports = {
                     console.log(response.code);
                 });
         }
-    }
+    },
 
+    /* Talk */
+
+    talkSimpleSendMessage: function(xthrift, message, txt = '', seq = 0) {
+        message.text = txt;
+        xthrift.sendMessage(0, message, (err, success) => {
+            return success;
+        })
+    },
+
+    talkSendMessage: function(callback, xthrift, txt, to, contentMetadata = {}, contentType = 0, seq = 0) {
+        let message = new TTypes.Message();
+        message.to = to;
+        message.text = txt;
+        message.contentMetadata = contentMetadata;
+        message.contentType = contentType;
+        xthrift.sendMessage(0, message, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success);
+            } else {
+                return success;
+            }
+        })
+    },
+
+    talkSendSticker: function(xthrift, to, packageId, stickerId) {
+        let contentMetadata = {
+            'STKVER': '100',
+            'STKPKGID': packageId,
+            'STKID': stickerId
+        }
+        return module.exports.talkSendMessage('', xthrift, '', to, contentMetadata, 7);
+    },
+
+    talkSendContact: function(xthrift, to, mid) {
+        let contentMetadata = {
+            'mid': mid
+        }
+        return module.exports.talkSendMessage('', xthrift, '', to, contentMetadata, 13);
+    },
+
+    talkSendGift: function(xthrift, to, productId, productType) {
+        let prod = ['theme', 'sticker'],
+            xt;
+        let msg = new TTypes.Message();
+        let random = Math.floor(Math.random() * 12) + 0;
+        if (productType == 'sticker') {
+            xt = 'STKPKGID';
+        } else {
+            xt = 'PRDID';
+        }
+        if (prod.indexOf(productType) != -1) {
+            msg.contentMetadata = {
+                'MSGTPL': random.toString(),
+                'PRDTYPE': productType.toUpperCase(),
+                xt: productId
+            }
+            msg.to = to;
+            msg.contentType = 9;
+            return module.exports.talkSimpleSendMessage(xthrift, msg);
+        }
+    },
+
+    talkUnsendMessage: function(xthrift, messageId) {
+        return xthrift.unsendMessage(0, messageId)
+    }
 }
