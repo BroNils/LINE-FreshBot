@@ -166,7 +166,7 @@ module.exports = {
             for (let key in success.events) {
                 module.exports.getOpType(success.events[key]);
             }
-        }, xthrift, 'm2c569f8a118264b808a7eede19ca3acc', 0, syncToken, continuationToken, limits, direction);
+        }, xthrift, squareChatMid, 0, syncToken, continuationToken, limits, direction);
     },
 
     squarePoll: function(callback, xthrift, conToken, syncToken, subsId = 0, limits = 1) {
