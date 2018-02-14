@@ -152,14 +152,13 @@ module.exports = {
 
     /* Square */
 
-    squarePollXync: function(xthrift, conToken, syncToken, subsId = 0, limits = 1) {
-        let reqx = new TTypes.FetchMyEventsRequest();
-        reqx.limit = limits;
-        reqx.syncToken = syncToken;
-        reqx.continuationToken = conToken;
-        reqx.subscriptionId = subsId;
-        let res = xthrift.fetchMyEvents(reqx);
-        return res;
+    squareSingleChatPoll: function(callback, xthrift, squareChatMid, subsId = 0, syncToken = '', continuationToken = '', limits = 1, direction = 2) {
+        module.exports.fetchSquareChatEvents((err, success) => {
+            callback(err, success);
+            for (let key in success.events) {
+                module.exports.getOpType(success.events[key]);
+            }
+        }, xthrift, 'm2c569f8a118264b808a7eede19ca3acc', 0, syncToken, continuationToken, limits, direction);
     },
 
     squarePoll: function(callback, xthrift, conToken, syncToken, subsId = 0, limits = 1) {
@@ -196,7 +195,28 @@ module.exports = {
                     msg: xmsg,
                     txt: xtxt
                 }
-                //console.info(JSON.stringify(ops.events[0].payload));
+                callback(xdata);
+            } else if (ops.events[0].type == 0) {
+                let xmsg = ops.events[0].payload.receiveMessage.squareMessage.message;
+                let sQmsg = ops.events[0].payload.receiveMessage.squareMessage;
+                const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
+                let xtxt = txt.toLowerCase();
+                let xdata = {
+                    sqmsg: sQmsg,
+                    msg: xmsg,
+                    txt: xtxt
+                }
+                callback(xdata);
+            } else if (ops.events[0].type == 1) {
+                let xmsg = ops.events[0].payload.sendMessage.squareMessage.message;
+                let sQmsg = ops.events[0].payload.sendMessage.squareMessage;
+                const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
+                let xtxt = txt.toLowerCase();
+                let xdata = {
+                    sqmsg: sQmsg,
+                    msg: xmsg,
+                    txt: xtxt
+                }
                 callback(xdata);
             }
         }
@@ -212,17 +232,13 @@ module.exports = {
         reqx.reqSeq = 0;
         reqx.squareChatMid = message.to;
         reqx.squareMessage = sQmsg;
-        try {
-            xthrift.sendMessage(reqx, (err, success) => {
-                if (err) throw err;
-                //console.info(JSON.stringify(success))
-                if (module.exports.isFunction(callback)) {
-                    callback(err, success);
-                }
-            });
-        } catch (error) {
-            console.log(error);
-        }
+        xthrift.sendMessage(reqx, (err, success) => {
+            if (err) throw err;
+            //console.info(JSON.stringify(success))
+            if (module.exports.isFunction(callback)) {
+                callback(err, success);
+            }
+        });
     },
 
     squareSendSticker: function(xthrift, squareChatMid, packageId, stickerId) {
@@ -342,14 +358,16 @@ module.exports = {
         return xthrift.createSquareChat(rq);
     },
 
-    fetchSquareChatEvents: function(xthrift, squareChatMid, subscriptionId = 0, syncToken = '', limit = 50, direction = 2) {
+    fetchSquareChatEvents: function(callback, xthrift, squareChatMid, subscriptionId = 0, syncToken = '', continuationToken = '', limit = 50, direction = 2) {
         let rq = new TTypes.FetchSquareChatEventsRequest();
         rq.squareChatMid = squareChatMid;
         rq.subscriptionId = subscriptionId;
         rq.syncToken = syncToken;
         rq.limit = limit;
         rq.direction = direction;
-        return xthrift.fetchSquareChatEvents(rq)
+        xthrift.fetchSquareChatEvents(rq, (err, success) => {
+            callback(err, success);
+        })
     },
 
     fetchMyEvents: function(callback, xthrift, subscriptionId = 0, syncToken = '', continuationToken = '', limit = 50) {
@@ -608,12 +626,12 @@ module.exports = {
             let range = "bytes 0-" + data.length + "/" + data.length - 1;
             let params = {
                 'name': 'a',
-                'ver': '1.0',
+                'ver': '2.0',
                 'oid': 'reqseq',
-                'reqseq': 0,
+                //'reqseq': 0,
                 'tomid': squareChatMid,
                 'range': data.length,
-                'attr': data,
+                //'attr': data,
                 'userid': message._from,
                 'cat': 'original',
                 'modelName': 'android',
@@ -636,9 +654,9 @@ module.exports = {
                 default:
                     callback('ERROR_NO_TYPE');
             }
-            console.info(range.toString());
-            console.info(new Buffer(JSON.stringify(params)).toString('base64'))
-            console.info(JSON.stringify(params))
+            //console.info(range.toString());
+            //console.info(new Buffer(JSON.stringify(params)).toString('base64'))
+            //console.info(JSON.stringify(params))
             unirest.post(config.LINE_OBS + '/r/g2/m/reqseq')
                 .headers({
                     ...xconfig.Headers,
