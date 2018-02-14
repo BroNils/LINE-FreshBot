@@ -50,7 +50,7 @@ const config = {
     X_LINE_APP: 'DESKTOPWIN\t7.18.1\tFDLRCN\t11.2.5',
     VGL_KEY: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIyZmRmN2VhMC05YWUzLTAxMzUtMDg1MC0wYTU4NjQ2MDE0MDQiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTA4ODQ3NDMxLCJwdWIiOiJzZW1jIiwidGl0bGUiOiJ2YWluZ2xvcnkiLCJhcHAiOiIyZmRkYjk3MC05YWUzLTAxMzUtMDg0ZS0wYTU4NjQ2MDE0MDQiLCJzY29wZSI6ImNvbW11bml0eSIsImxpbWl0IjoxMH0.OgbSz-XS-DO0xwF445lIWMe0o_DRI7TuVTZRRFXCfis',
     ip: '127.0.0.1',
-    version: '2.2',
+    version: '2.4',
     repo: 'https://github.com/GoogleX133/LINE-SquareBot',
     raw_repo: 'https://raw.githubusercontent.com/GoogleX133/LINE-SquareBot/master/',
     port: 1337,
