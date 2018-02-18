@@ -37,27 +37,29 @@ module.exports = {
         });
     },
 
-    saveSquareRev: function(sqChatMid='', syncToken, continuationToken){
-		let xdata = {
-		    syncToken: syncToken,
-		    continuationToken: continuationToken
-	    }
-		jsonfile.writeFile('./data/square-'+sqChatMid+'.json', xdata, function(err) {
-            if (err) {return console.log(err);}
+    saveSquareRev: function(sqChatMid = '', syncToken, continuationToken) {
+        let xdata = {
+            syncToken: syncToken,
+            continuationToken: continuationToken
+        }
+        jsonfile.writeFile('./data/square-' + sqChatMid + '.json', xdata, function(err) {
+            if (err) {
+                return console.log(err);
+            }
         });
-	},
-	
-	restoreSquareRev: function(callback, sqChatMid=''){
-		if (fs.existsSync('./data/square-'+sqChatMid+'.json')){
-		    fs.readFile('./data/square-'+sqChatMid+'.json', (err, data)=>{
-			    if (err) throw err;
+    },
+
+    restoreSquareRev: function(callback, sqChatMid = '') {
+        if (fs.existsSync('./data/square-' + sqChatMid + '.json')) {
+            fs.readFile('./data/square-' + sqChatMid + '.json', (err, data) => {
+                if (err) throw err;
                 //xstor = JSON.parse(data);
                 callback(JSON.parse(data));
-		    })
-		}else{
-			callback('error');
-		}
-	},
+            })
+        } else {
+            callback('error');
+        }
+    },
 
     storedJSON: function(paths, callback) {
         let xstor;
@@ -220,7 +222,30 @@ module.exports = {
         }
     },
 
-    squareSendMessage: function(xthrift, message, txt, seq = 0, callback) {
+    squareSendMessage: function(callback, xthrift, to, txt = '', contentType = 0, contentMetadata = {}, seq = 0) {
+        let reqx = new TTypes.SendMessageRequest();
+        let sQmsg = new TTypes.SquareMessage();
+        let message = new TTypes.Message();
+        message.text = txt;
+        message.to = to;
+        message.contentType = contentType;
+        message.contentMetadata = contentMetadata;
+        sQmsg.message = message;
+        sQmsg.fromType = 4;
+        //sQmsg.squareMessageRevision = 1;
+        reqx.reqSeq = 0;
+        reqx.squareChatMid = message.to;
+        reqx.squareMessage = sQmsg;
+        xthrift.sendMessage(reqx, (err, success) => {
+            if (err) throw err;
+            //console.info(JSON.stringify(success))
+            if (module.exports.isFunction(callback)) {
+                callback(err, success);
+            }
+        });
+    },
+
+    squareSimpleSendMessage: function(xthrift, message, txt, seq = 0, callback) {
         message.text = txt;
         let reqx = new TTypes.SendMessageRequest();
         let sQmsg = new TTypes.SquareMessage();
@@ -231,7 +256,7 @@ module.exports = {
         reqx.squareChatMid = message.to;
         reqx.squareMessage = sQmsg;
         xthrift.sendMessage(reqx, (err, success) => {
-            if (err) throw err;
+            if (err) console.info(err);
             //console.info(JSON.stringify(success))
             if (module.exports.isFunction(callback)) {
                 callback(err, success);
