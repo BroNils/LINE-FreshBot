@@ -642,58 +642,7 @@ module.exports = {
     },
 
     uploadToSquare: function(xthrift, xconfig, message, authToken, squareChatMid, paths, type = 'image') {
-        if (['image', 'gif', 'video', 'audio', 'file'].indexOf(type) != -1) {
-            const fp = path.resolve(paths)
-            let data = fs.readFileSync(paths),
-                contentType;
-            let range = "bytes 0-" + data.length + "/" + data.length - 1;
-            let params = {
-                'name': 'a',
-                'ver': '2.0',
-                'oid': 'reqseq',
-                //'reqseq': 0,
-                'tomid': squareChatMid,
-                'range': data.length,
-                //'attr': data,
-                'userid': message._from,
-                'cat': 'original',
-                'modelName': 'android',
-                'type': type
-            }
-            switch (type) {
-                case 'image':
-                    contentType = 'image/jpeg';
-                    break;
-                case 'gif':
-                    contentType = 'image/gif';
-                    break;
-                case 'video':
-                    params['duration'] = 60000;
-                    contentType = 'video/mp4';
-                    break;
-                case 'audio':
-                    params['duration'] = 0;
-                    contentType = 'audio/mp3';
-                default:
-                    callback('ERROR_NO_TYPE');
-            }
-            //console.info(range.toString());
-            //console.info(new Buffer(JSON.stringify(params)).toString('base64'))
-            //console.info(JSON.stringify(params))
-            unirest.post(config.LINE_OBS + '/r/g2/m/reqseq')
-                .headers({
-                    ...xconfig.Headers,
-                    'Content-Length': data.length.toString(),
-                    'x-obs-params': new Buffer(JSON.stringify(params)).toString('base64'),
-                    'Content-Type': contentType
-                })
-                .field(params)
-                .attach('files', fp)
-                .end(function(response) {
-                    console.log(response.body);
-                    console.log(response.code);
-                });
-        }
+        //SECRET FORMULA ^_^
     },
 
     /* Talk */
