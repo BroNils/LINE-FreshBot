@@ -37,37 +37,27 @@ module.exports = {
         });
     },
 
-    saveSquareRev: function(sqChatMid = '', syncToken, continuationToken) {
-        let xdata = {}
-        if (!sqChatMid || sqChatMid == null) {
-            xdata['default'] = {
-                syncToken: syncToken,
-                continuationToken: continuationToken
-            }
-        } else {
-            xdata[sqChatMid] = {
-                syncToken: syncToken,
-                continuationToken: continuationToken
-            }
-        }
-        jsonfile.writeFile('./data/square.json', xdata, function(err) {
-            if (err) {
-                return console.log(err);
-            }
+    saveSquareRev: function(sqChatMid='', syncToken, continuationToken){
+		let xdata = {
+		    syncToken: syncToken,
+		    continuationToken: continuationToken
+	    }
+		jsonfile.writeFile('./data/square-'+sqChatMid+'.json', xdata, function(err) {
+            if (err) {return console.log(err);}
         });
-    },
-
-    restoreSquareRev: function(callback) {
-        if (fs.existsSync('./data/square.json')) {
-            fs.readFile('./data/square.json', (err, data) => {
-                if (err) throw err;
+	},
+	
+	restoreSquareRev: function(callback, sqChatMid=''){
+		if (fs.existsSync('./data/square-'+sqChatMid+'.json')){
+		    fs.readFile('./data/square-'+sqChatMid+'.json', (err, data)=>{
+			    if (err) throw err;
                 //xstor = JSON.parse(data);
                 callback(JSON.parse(data));
-            })
-        } else {
-            callback('error');
-        }
-    },
+		    })
+		}else{
+			callback('error');
+		}
+	},
 
     storedJSON: function(paths, callback) {
         let xstor;
