@@ -39,7 +39,7 @@ const request = require('request');
 const LineService = require('./thrift/TalkService.js');
 const jsonfile = require('jsonfile');
 const TTypes = require('./thrift/line_types');
-const sqbot = require('./pkg/main');
+const botlib = require('./pkg/main');
 const PinVerifier = require('./pkg/pinVerifier');
 
 
@@ -64,7 +64,7 @@ var options = {
 
 /* Update Check */
 console.log('\nChecking update....')
-sqbot.checkUpdate();
+botlib.checkUpdate();
 
 /* Function */
 
@@ -85,18 +85,18 @@ function setTHttpClient(xoptions = {
     if (axy === true) {
         TauthService = thrift.createHttpClient(require('./thrift/AuthService.js'), connection);
         axy = false;
-        if (sqbot.isFunction(callback)) {
+        if (botlib.isFunction(callback)) {
             callback("DONE");
         }
     } else if (axc === true) {
         eval(`Tcustom.${xcustom} = thrift.createHttpClient(require('./thrift/${tpath}.js'), connection);`);
         axc = false;
-        if (sqbot.isFunction(callback)) {
+        if (botlib.isFunction(callback)) {
             callback("DONE");
         }
     } else {
         Tclient = thrift.createHttpClient(LineService, connection);
-        if (sqbot.isFunction(callback)) {
+        if (botlib.isFunction(callback)) {
             callback("DONE");
         }
     }
@@ -173,7 +173,7 @@ function credLogin(id, password, callback) {
     const pinVerifier = new PinVerifier(id, password);
     let provider = 1;
     setTHttpClient(options);
-    sqbot.getRSAKeyInfo(provider, Tclient, (key, credentials) => {
+    botlib.getRSAKeyInfo(provider, Tclient, (key, credentials) => {
         authConn(() => {
             const rsaCrypto = pinVerifier.getRSACrypto(credentials);
             reqx.type = 0;
@@ -196,7 +196,7 @@ function credLogin(id, password, callback) {
                     authConn(() => {
                         let pinCode = success.pinCode;
                         console.info("\n\n=============================\nEnter This Pincode => " + success.pinCode + "\nto your mobile phone in 2 minutes\n=============================");
-                        sqbot.checkLoginResultType(success.type, success);
+                        botlib.checkLoginResultType(success.type, success);
                         reqx = new TTypes.LoginRequest();
                         reqx.type = 1;
                         reqx = new TTypes.LoginRequest();
@@ -211,7 +211,7 @@ function credLogin(id, password, callback) {
                                     setTHttpClient(options);
                                     config.tokenn = success.authToken;
                                     console.info('> AuthToken: ' + res.authToken);
-                                    sqbot.checkLoginResultType(success.type, success);
+                                    botlib.checkLoginResultType(success.type, success);
                                     callback(success);
                                 })
                             })
@@ -280,11 +280,11 @@ function lineLogin(type = 1, callback) {
 /* Edit your keyword here */
 
 function botKeyword(ops) {
-    sqbot.getSquareMessage(ops, (res) => {
+    botlib.getSquareMessage(ops, (res) => {
         if (res.msg && res.msg !== 'undefined') {
             let message = res.msg;
             if (res.txt == 'help') {
-                sqbot.squareSendMessage(Tcustom.square, message, '~~~~Keyword\n\n\
+                botlib.squareSimpleSendMessage(Tcustom.square, message, '~~~~Keyword\n\n\
 - creator\n\
 - help\n\
 - myid\n\
@@ -293,29 +293,29 @@ function botKeyword(ops) {
             }
 
             if (res.txt == 'myid') {
-                sqbot.squareSendMessage(Tcustom.square, message, 'Your ID: ' + message._from);
+                botlib.squareSimpleSendMessage(Tcustom.square, message, 'Your ID: ' + message._from);
             }
 
             if (res.txt == 'speed') {
                 const curTime = (Date.now() / 1000);
-                sqbot.squareSendMessage(Tcustom.square, message, 'Please wait...', 0, (err, success) => {
+                botlib.squareSimpleSendMessage(Tcustom.square, message, 'Please wait...', 0, (err, success) => {
                     const rtime = (Date.now() / 1000);
                     const xtime = rtime - curTime;
-                    sqbot.squareSendMessage(Tcustom.square, message, xtime + ' seconds')
+                    botlib.squareSimpleSendMessage(Tcustom.square, message, xtime + ' seconds')
                 });
             }
 
             if (res.txt == 'creator') {
-                sqbot.squareSendContact(Tcustom.square, message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
+                botlib.squareSendContact(Tcustom.square, message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
             }
 
             if (res.txt == 'time') {
                 let d = new Date();
                 let xmenit = d.getMinutes().toString().split("");
                 if (xmenit.length < 2) {
-                    sqbot.squareSendMessage(Tcustom.square, message, d.getHours() + ":0" + d.getMinutes());
+                    botlib.squareSimpleSendMessage(Tcustom.square, message, d.getHours() + ":0" + d.getMinutes());
                 } else {
-                    sqbot.squareSendMessage(Tcustom.square, message, d.getHours() + ":" + d.getMinutes());
+                    botlib.squareSimpleSendMessage(Tcustom.square, message, d.getHours() + ":" + d.getMinutes());
                 }
             }
 
@@ -325,20 +325,12 @@ function botKeyword(ops) {
 
 /*---------------------------------------------------------------------------*/
 
-sqbot.restoreSquareRev((res) => {
+botlib.restoreSquareRev((res) => {
     if (res != 'error') {
-        if (!sqChatMid || sqChatMid == null) {
-            config.sync = res.default.syncToken;
-            config.conToken = res.default.continuationToken;
-        } else if (!res.sqChatMid || res.sqChatMid == null) {
-            config.sync = '';
-            config.conToken = '';
-        } else {
-            config.sync = res.sqChatMid.syncToken;
-            config.conToken = res.sqChatMid.continuationToken;
-        }
+        config.sync = res.syncToken;
+        config.conToken = res.continuationToken;
     }
-});
+}, sqChatMid);
 
 lineLogin(LOGINType, (res) => {
     if (res == 'FAIL') {
@@ -350,24 +342,24 @@ lineLogin(LOGINType, (res) => {
         console.info('> Success connected to square service');
         setInterval(() => {
             if (config.sync == '' || config.conToken == '') {
-                sqbot.squareSingleChatPoll((err, success) => {
+                botlib.squareSingleChatPoll((err, success) => {
                     //console.info(err)
                     if (err) throw err;
                     //console.info(success.events[0].payload)
                     botKeyword(success);
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
-                    sqbot.saveSquareRev(sqChatMid, config.sync, config.conToken);
+                    botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
                 }, Tcustom.square, sqChatMid, 0, '', '', 1, 1);
             } else {
-                sqbot.squareSingleChatPoll((err, success) => {
+                botlib.squareSingleChatPoll((err, success) => {
                     //console.info(err)
                     if (err) throw err;
                     //console.info(success.events[0].payload)
                     botKeyword(success);
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
-                    sqbot.saveSquareRev(sqChatMid, config.sync, config.conToken);
+                    botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
                 }, Tcustom.square, sqChatMid, 0, config.sync, config.conToken, 1, 1);
             }
         }, 800);
