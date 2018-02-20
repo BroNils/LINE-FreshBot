@@ -365,3 +365,8 @@ lineLogin(LOGINType, (res) => {
         }, 800);
     })
 });
+
+process.on('uncaughtException', function (err) {
+    console.info("Something make me cry \n"+err);
+
+});
