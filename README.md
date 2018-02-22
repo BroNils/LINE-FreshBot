@@ -61,5 +61,5 @@ $ npm i
 
 You can run with<br>
 ```sh
-$ npm start
+$ node ./index.js
 ```
