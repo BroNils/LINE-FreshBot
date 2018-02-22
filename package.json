@@ -1,6 +1,6 @@
 {
   "name": "square-bot",
-  "version": "2.4.0",
+  "version": "3.0.0",
   "description": "LINE Square Bot",
   "main": "index.js",
   "scripts": {
