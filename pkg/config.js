@@ -12,9 +12,6 @@ const config = {
     LINE_DOMAIN: 'gf.line.naver.jp',
     LINE_DOMAIN_2ND: 'gd2.line.naver.jp',
     LINE_DOMAIN_3RD: 'gfs.line.naver.jp',
-    LINE_DOMAIN_4TH: 'gfps.line.naver.jp', //BAD CONN
-    LINE_KEEP_X: '/r/keep/p/', //https://obs-sg.line-apps.com/r/keep/p/1508751723510tffffffff
-    LINE_KEEP: '/kp/api/v21/keep', //Keep -> gfs.line.naver.jp/kp/api/v21/keep/sync.json?revision=0&limit=50&serviceType=1 || fetch.json?startRevision=0&limit=50&serviceType=1
     LINE_OS_URL: 'os.line.naver.jp',
     LINE_HTTP_URL: '/api/v4/TalkService.do',
     LINE_HTTP_URL_2ND: '/api/v3/TalkService.do',
@@ -47,10 +44,10 @@ const config = {
     //X_LINE_APP: 'DESKTOPMAC 10.10.2-YOSEMITE-x64 MAC 4.5.0',
     //X_LINE_APP: 'CHROMEOS\t1.4.13\tChrome_OS\t1',
     //X_LINE_APP: 'CHROMEOS\t1.4.13\tChrome_OS\t1',
+    //X_LINE_APP: 'ANDROIDLITE\t1.9.4\tAndroid\t6.0.1'
     X_LINE_APP: 'DESKTOPWIN\t7.18.1\tFDLRCN\t11.2.5',
-    VGL_KEY: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIyZmRmN2VhMC05YWUzLTAxMzUtMDg1MC0wYTU4NjQ2MDE0MDQiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTA4ODQ3NDMxLCJwdWIiOiJzZW1jIiwidGl0bGUiOiJ2YWluZ2xvcnkiLCJhcHAiOiIyZmRkYjk3MC05YWUzLTAxMzUtMDg0ZS0wYTU4NjQ2MDE0MDQiLCJzY29wZSI6ImNvbW11bml0eSIsImxpbWl0IjoxMH0.OgbSz-XS-DO0xwF445lIWMe0o_DRI7TuVTZRRFXCfis',
     ip: '127.0.0.1',
-    version: '2.8',
+    version: '3.0',
     repo: 'https://github.com/GoogleX133/LINE-SquareBot',
     raw_repo: 'https://raw.githubusercontent.com/GoogleX133/LINE-SquareBot/master/',
     port: 1337,
