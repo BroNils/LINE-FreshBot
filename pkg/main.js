@@ -647,6 +647,7 @@ module.exports = {
 
     /* Talk */
 
+    /* Talk */
     talkSimpleSendMessage: function(xthrift, message, txt = '', seq = 0) {
         message.text = txt;
         xthrift.sendMessage(0, message, (err, success) => {
@@ -709,5 +710,39 @@ module.exports = {
 
     talkUnsendMessage: function(xthrift, messageId) {
         return xthrift.unsendMessage(0, messageId)
+    },
+
+    talkFetchOps(callback, xthrift, revision, count = 0) {
+        xthrift.fetchOps(revision, count, 0, 0, (err, success) => {
+            for (let key in success) {
+                module.exports.talkGetOpType(success[key])
+            }
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success;
+            }
+        });
+    },
+
+    talkGetOpType: function(operations) {
+        for (let key in TTypes.OpType) {
+            if (operations.type == TTypes.OpType[key]) {
+                if (operations.type != 0) {
+                    console.info(`[* ${operations.type} ] ${key} `);
+                }
+            }
+        }
+    },
+
+    talkGetMessage: function(operation, callback) {
+        if (operation.type == 25 || operation.type == 26) {
+            const txt = (operation.message.text !== '' && operation.message.text != null) ? operation.message.text : '';
+            let message = new TTypes.Message(operation.message);
+            Object.assign(message, {
+                ct: operation.createdTime.toString()
+            });
+            callback(message)
+        }
     }
 }
