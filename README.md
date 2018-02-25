@@ -16,6 +16,7 @@ PAGES
     - [Linux](#linux-installation)
     - [Termux](#linux-installation)
 - [How to run](#how-to-run)
+- [How to get ChatMid](#how-to-get-chatmid)
 
 
 ## What is LINE SquareBot ?
@@ -62,4 +63,11 @@ $ npm i
 You can run with<br>
 ```sh
 $ node ./index.js
+```
+
+## How to get ChatMid
+
+Simple, you just run this script<br>
+```sh
+$ node ./examples/getchatmid.js
 ```
