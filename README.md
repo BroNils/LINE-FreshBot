@@ -1,5 +1,5 @@
 # ![LINE](https://github.com/GoogleX133/LINE-WebChat/blob/master/public/images/small.png) LINE SquareBot
-[![NPM](https://img.shields.io/badge/npm-%3E=%205.5.0-blue.svg)](https://nodejs.org/) [![Node](https://img.shields.io/badge/node-%3E=%208.0.0-brightgreen.svg)](https://nodejs.org/) [![AUR](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/GoogleX133/LINE-SquareBot/blob/master/LICENSE) [![LINE](https://img.shields.io/badge/line-%207.18-brightgreen.svg)](http://line.me/) [![Contact Me](https://img.shields.io/badge/chat-on%20line-1bacbc.svg)](http://line.me/ti/p/MB6mnZWbu_) [![Version](https://img.shields.io/badge/alpha-3.0-brightgreen.svg)](https://github.com/GoogleX133/LINE-SquareBot)<br><br>
+[![NPM](https://img.shields.io/badge/npm-%3E=%205.5.0-blue.svg)](https://nodejs.org/) [![Node](https://img.shields.io/badge/node-%3E=%208.0.0-brightgreen.svg)](https://nodejs.org/) [![AUR](https://img.shields.io/aur/license/yaourt.svg)](https://github.com/GoogleX133/LINE-SquareBot/blob/master/LICENSE) [![LINE](https://img.shields.io/badge/line-%207.18-brightgreen.svg)](http://line.me/) [![Contact Me](https://img.shields.io/badge/chat-on%20line-1bacbc.svg)](http://line.me/ti/p/MB6mnZWbu_) [![Version](https://img.shields.io/badge/alpha-3.1-brightgreen.svg)](https://github.com/GoogleX133/LINE-SquareBot)<br><br>
 LINE Messaging Web Platform
 
 ----
@@ -15,6 +15,7 @@ PAGES
     - [Windows](#windows-installation)
     - [Linux](#linux-installation)
     - [Termux](#linux-installation)
+    - [Setup](#setup)
 - [How to run](#how-to-run)
 - [How to get ChatMid](#how-to-get-chatmid)
 
@@ -57,6 +58,10 @@ $ git clone https://github.com/GoogleX133/LINE-SquareBot.git
 $ cd LINE-SquareBot
 $ npm i
 ```
+
+## Setup
+
+After you install with `npm i `, all you have to do is insert your squareChatMid on `var sqChatMid = 'HERE';` at index.js
 
 ## How to run
 
