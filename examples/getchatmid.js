@@ -299,7 +299,7 @@ function getSqChatList(ddata) {
     }
     setTimeout(() => {
         fs.writeFileSync(__dirname + '/../data/squarechatlist.txt', hasiltxt, 'utf-8')
-        console.info('done')
+        console.info('Done!, saved to ./data/squarechatlist.txt')
     }, 50000)
 }
 
