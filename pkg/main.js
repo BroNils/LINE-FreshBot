@@ -264,42 +264,49 @@ module.exports = {
         });
     },
 
-    squareSendSticker: function(xthrift, squareChatMid, packageId, stickerId){
-		let msg = new TTypes.Message();
+    squareSendSticker: function(xthrift, squareChatMid, packageId, stickerId) {
+        let msg = new TTypes.Message();
         msg.contentMetadata = {
             'STKVER': '100',
             'STKPKGID': packageId,
             'STKID': stickerId
         }
-		msg.to = squareChatMid;
-		msg.contentType = 7;
+        msg.to = squareChatMid;
+        msg.contentType = 7;
         return module.exports.squareSimpleSendMessage(xthrift, msg, '');
-	},
-	
-	squareSendContact: function(xthrift, squareChatMid, mid){
-		let msg = new TTypes.Message();
-        msg.contentMetadata = {'mid': mid};
-		msg.to = squareChatMid;
-		msg.contentType = 13;
+    },
+
+    squareSendContact: function(xthrift, squareChatMid, mid) {
+        let msg = new TTypes.Message();
+        msg.contentMetadata = {
+            'mid': mid
+        };
+        msg.to = squareChatMid;
+        msg.contentType = 13;
         return module.exports.squareSimpleSendMessage(xthrift, msg, '');
-	},
-	
-	squareSendGift: function(xthrift, squareChatMid, productId, productType){
-		let prod = ['theme','sticker'],xt;
-		let msg = new TTypes.Message();
-		let random = Math.floor(Math.random() * 10) + 0;
-		if(productType == 'sticker'){xt = 'STKPKGID';}else{xt = 'PRDID';}
-        if(prod.indexOf(productType) != -1){
+    },
+
+    squareSendGift: function(xthrift, squareChatMid, productId, productType) {
+        let prod = ['theme', 'sticker'],
+            xt;
+        let msg = new TTypes.Message();
+        let random = Math.floor(Math.random() * 10) + 0;
+        if (productType == 'sticker') {
+            xt = 'STKPKGID';
+        } else {
+            xt = 'PRDID';
+        }
+        if (prod.indexOf(productType) != -1) {
             msg.contentMetadata = {
                 'MSGTPL': random.toString(),
                 'PRDTYPE': productType.toUpperCase(),
                 xt: productId
             }
-			msg.to = squareChatMid;
-		    msg.contentType = 9;
+            msg.to = squareChatMid;
+            msg.contentType = 9;
             return module.exports.squareSimpleSendMessage(xthrift, msg, '');
-		}
-	},
+        }
+    },
 
     destroySquareMessage: function(xthrift, squareChatMid, messageId) {
         let rq = new TTypes.DestroyMessageRequest();
