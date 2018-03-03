@@ -744,5 +744,125 @@ module.exports = {
             });
             callback(message)
         }
+    },
+
+    talkGetContacts: function(xthrift, mid = [], callback) {
+        xthrift.getContacts(mid, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkGetContact: function(xthrift, mid, callback) {
+        xthrift.getContact(mid, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkKickMember: function(xthrift, group, memid) {
+        return xthrift.kickoutFromGroup(0, group, memid);
+    },
+
+    talkCancel: function(xthrift, groupid, member) {
+        return xthrift.cancelGroupInvitation(0, groupid, member);
+    },
+
+    talkGetGroupsJoined(xthrift, callback) {
+        xthrift.getGroupIdsJoined((err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkGetProfile(xthrift, callback) {
+        xthrift.getProfile((err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        });
+    },
+
+    talkAcceptGroupInvitation(xthrift, groupid) {
+        return xthrift.acceptGroupInvitation(0, groupid);
+    },
+
+    talkInviteIntoGroup(xthrift, group, memid) {
+        return xthrift.inviteIntoGroup(0, group, memid);
+    },
+
+    talkUpdateGroup(xthrift, group) {
+        return xthrift.updateGroup(0, group)
+    },
+
+    talkGetGroups: function(xthrift, gid = [], callback) {
+        xthrift.getGroups(gid, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkGetRoom: function(xthrift, rid, callback) {
+        xthrift.getRoom(rid, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkGetGroup: function(xthrift, mid, callback) {
+        xthrift.getGroup(gid, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkGetAllContactIds(xthrift, callback) {
+        xthrift.getAllContactIds((err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkFindGroupByTicket: function(xthrift, ticket, callback) {
+        xthrift.findGroupByTicket(ticket, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
+    },
+
+    talkAcceptGroupInvitationByTicket: function(xthrift, ticket, gid, callback) {
+        xthrift.acceptGroupInvitationByTicket(0, gid, ticket, (err, success) => {
+            if (module.exports.isFunction(callback)) {
+                callback(err, success)
+            } else {
+                return success
+            }
+        })
     }
 }
