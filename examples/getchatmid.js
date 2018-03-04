@@ -38,7 +38,7 @@ const request = require('request');
 const LineService = require('../thrift/TalkService.js');
 const jsonfile = require('jsonfile');
 const TTypes = require('../thrift/line_types');
-const botlib = require('../pkg/main');
+const BotLib = require('../pkg/BotLib');
 const PinVerifier = require('../pkg/pinVerifier');
 
 
@@ -60,6 +60,7 @@ var options = {
     path: config.LINE_HTTP_URL,
     https: true
 };
+var botlib = new BotLib('', config);
 
 /* Update Check */
 console.log('\nChecking update....')
@@ -123,105 +124,103 @@ function serviceConn(path, xcustom, tpath, callback) {
 }
 
 function getQrLink(callback) {
-    options.path = config.LINE_HTTP_URL;
-    setTHttpClient(options, (xres) => {
-        if (xres == "DONE") {
-            Tclient.getAuthQrcode(true, "GBOT", (err, result) => {
-                // console.log('here')
-                //console.log(err)
-                const qrcodeUrl = `line://au/q/${result.verifier}`;
-                callback(qrcodeUrl, result.verifier);
-            });
-        }
-    });
+	options.path = config.LINE_HTTP_URL;
+    setTHttpClient(options,(xres) => {
+		if(xres == "DONE"){
+   			 Tclient.getAuthQrcode(true, "SQBOT",(err, result) => {
+    		  // console.log('here')
+			  //console.log(err)
+     		 const qrcodeUrl = `line://au/q/${result.verifier}`;
+			callback(qrcodeUrl,result.verifier);
+    		});
+		}
+	});
 }
 
-function qrLogin(xverifier, callback) {
-    Object.assign(config.Headers, {
-        'X-Line-Access': xverifier
-    });
-    unirest.get('https://gd2.line.naver.jp/Q')
-        .headers(config.Headers)
-        .timeout(120000)
-        .end(async (res) => {
+function qrLogin(xverifier,callback){
+	Object.assign(config.Headers,{ 'X-Line-Access': xverifier });
+        unirest.get('https://gd2.line.naver.jp/Q')
+          .headers(config.Headers)
+          .timeout(120000)
+          .end(async (res) => {
             const verifiedQr = res.body.result.verifier;
-            authConn((xret) => {
-                if (xret == "DONE") {
-                    reqx.type = 1;
-                    reqx.verifier = verifiedQr;
-                    reqx.systemName = "GBOT";
-                    reqx.identityProvider = 1;
-                    reqx.e2eeVersion = 0;
-                    TauthService.loginZ(reqx, (err, success) => {
-                        //console.info("err=>"+err);
-                        //console.info(JSON.stringify(success));
-                        config.tokenn = success.authToken;
-                        config.certificate = success.certificate;
-                        let xdata = {
-                            authToken: success.authToken,
-                            certificate: success.certificate
-                        }
-                        callback(xdata);
-                    });
-                }
-            });
-        });
+			authConn((xret) => {
+			if(xret == "DONE"){
+			reqx.type = 1;
+			reqx.verifier = verifiedQr;
+			reqx.systemName = "SQBOT";
+			reqx.identityProvider = 1;
+			reqx.e2eeVersion = 0;
+			TauthService.loginZ(reqx,(err,success) => {
+				//console.info("err=>"+err);
+					//console.info(JSON.stringify(success));
+				config.tokenn = success.authToken;
+				config.certificate = success.certificate;
+				let xdata = {
+					authToken: success.authToken,
+					certificate: success.certificate
+				}
+				callback(xdata);
+			});}
+			});
+          });
 }
 
-function credLogin(id, password, callback) {
-    const pinVerifier = new PinVerifier(id, password);
-    let provider = 1;
-    setTHttpClient(options);
-    botlib.getRSAKeyInfo(provider, Tclient, (key, credentials) => {
-        authConn(() => {
-            const rsaCrypto = pinVerifier.getRSACrypto(credentials);
-            reqx.type = 0;
-            reqx.identityProvider = provider;
-            reqx.identifier = rsaCrypto.keyname;
-            reqx.password = rsaCrypto.credentials;
-            reqx.keepLoggedIn = true;
-            reqx.accessLocation = config.ip;
-            reqx.systemName = 'GBot';
-            reqx.e2eeVersion = 0;
-            try {
-                TauthService.loginZ(reqx, (err, success) => {
-                    if (err) {
-                        console.log('\n\n');
-                        console.error("=> " + err.reason);
-                        process.exit();
-                    }
-                    options.path = config.LINE_COMMAND_PATH;
-                    setTHttpClient(options);
-                    authConn(() => {
-                        let pinCode = success.pinCode;
-                        console.info("\n\n=============================\nEnter This Pincode => " + success.pinCode + "\nto your mobile phone in 2 minutes\n=============================");
-                        botlib.checkLoginResultType(success.type, success);
-                        reqx = new TTypes.LoginRequest();
-                        reqx.type = 1;
-                        reqx = new TTypes.LoginRequest();
-                        unirest.get('https://' + config.LINE_DOMAIN + config.LINE_CERTIFICATE_URL)
-                            .headers(config.Headers)
-                            .timeout(120000)
-                            .end(async (res) => {
-                                reqx.type = 1;
-                                reqx.verifier = res.body.result.verifier;
-                                TauthService.loginZ(reqx, (err, success) => {
-                                    options.path = config.LINE_POLL_URL;
-                                    setTHttpClient(options);
-                                    config.tokenn = success.authToken;
-                                    console.info('> AuthToken: ' + res.authToken);
-                                    botlib.checkLoginResultType(success.type, success);
-                                    callback(success);
-                                })
-                            })
-                    });
-                });
-            } catch (error) {
-                console.log('error');
-                console.log(error);
-            }
-        })
-    })
+function credLogin(id,password,callback){
+	  const pinVerifier = new PinVerifier(id, password);
+	  let provider = 1;
+	  setTHttpClient(options);
+	  botlib = new BotLib(Tclient,config)
+	  botlib.getRSAKeyInfo(provider, (key, credentials) => {
+		  authConn(()=>{
+		  const rsaCrypto = pinVerifier.getRSACrypto(credentials);
+		  reqx.type = 0;
+	      reqx.identityProvider = provider;
+		  reqx.identifier = rsaCrypto.keyname;
+		  reqx.password = rsaCrypto.credentials;
+		  reqx.keepLoggedIn = true;
+		  reqx.accessLocation = config.ip;
+		  reqx.systemName = 'SquareBot';
+		  reqx.e2eeVersion = 0;
+			  try{
+			      TauthService.loginZ(reqx,(err,success) => {
+				      if (err) {
+                          console.log('\n\n');
+                          console.error("=> "+err.reason);
+                          process.exit();
+                      }
+				      options.path = config.LINE_COMMAND_PATH;
+                      setTHttpClient(options);
+				      authConn(()=>{
+						  let pinCode = success.pinCode;
+                	      console.info("\n\n=============================\nEnter This Pincode => "+success.pinCode+"\nto your mobile phone in 2 minutes\n=============================");
+                	      botlib.checkLoginResultType(success.type, success);
+						  reqx = new TTypes.LoginRequest();
+						  reqx.type = 1;
+						  reqx = new TTypes.LoginRequest();
+		                  unirest.get('https://'+config.LINE_DOMAIN+config.LINE_CERTIFICATE_URL)
+						   .headers(config.Headers)
+						   .timeout(120000)
+                           .end(async (res) => {
+			                 reqx.type = 1;
+			                 reqx.verifier = res.body.result.verifier;
+	                         TauthService.loginZ(reqx,(err,success) => {
+						       options.path = config.LINE_POLL_URL;
+                               setTHttpClient(options);
+							   config.tokenn = success.authToken;
+							   console.info('> AuthToken: '+success.authToken);
+               		           botlib.checkLoginResultType(success.type, success);
+               		           callback(success);
+	                         })
+                           })
+					 });
+			      });
+			  }catch(error) {
+                  console.log('error');
+                  console.log(error);
+              }
+		  })
+	  })
 }
 
 function lineLogin(type = 1, callback) {
@@ -295,7 +294,7 @@ function getSqChatList(ddata) {
                 hasiltxt += 'SquareName: ' + namex + '\n\n';
                 console.info(namex)
             }
-        }, Tcustom.square, midx)
+        },midx)
     }
     setTimeout(() => {
         fs.writeFileSync(__dirname + '/../data/squarechatlist.txt', hasiltxt, 'utf-8')
@@ -312,6 +311,7 @@ lineLogin(LOGINType, (res) => {
     }
     options.headers['X-Line-Access'] = res.authToken;
     serviceConn('/SQS1', 'square', 'SquareService', (res) => {
+		botlib = new BotLib(Tcustom.square, config);
         console.info('> Success connected to talk service');
         let hasiltxt = '#Your Square List\n',
             numb;
@@ -327,7 +327,7 @@ lineLogin(LOGINType, (res) => {
             }
             fs.writeFileSync(__dirname + '/../data/squarelist.txt', hasiltxt, 'utf-8')
             console.info('Please wait.....')
-        }, Tcustom.square)
+        })
     })
 });
 
