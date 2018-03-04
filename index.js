@@ -41,7 +41,7 @@ const jsonfile = require('jsonfile');
 const TTypes = require('./thrift/line_types');
 const botlib = require('./pkg/main');
 const PinVerifier = require('./pkg/pinVerifier');
-
+const BotLib = require('./pkg/BotLib');
 
 /* GLOBAL Var */
 
@@ -61,6 +61,7 @@ var options = {
     path: config.LINE_HTTP_URL,
     https: true
 };
+var botlib = new BotLib('', config);
 
 /* Update Check */
 console.log('\nChecking update....')
@@ -173,6 +174,7 @@ function credLogin(id, password, callback) {
     const pinVerifier = new PinVerifier(id, password);
     let provider = 1;
     setTHttpClient(options);
+    botlib = new BotLib(Tclient, config)
     botlib.getRSAKeyInfo(provider, Tclient, (key, credentials) => {
         authConn(() => {
             const rsaCrypto = pinVerifier.getRSACrypto(credentials);
@@ -284,7 +286,7 @@ function botKeyword(ops) {
         if (res.msg && res.msg !== 'undefined') {
             let message = res.msg;
             if (res.txt == 'help') {
-                botlib.squareSimpleSendMessage(Tcustom.square, message, '~~~~Keyword\n\n\
+                botlib.squareSimpleSendMessage(message, '~~~~Keyword\n\n\
 - creator\n\
 - help\n\
 - myid\n\
@@ -293,29 +295,29 @@ function botKeyword(ops) {
             }
 
             if (res.txt == 'myid') {
-                botlib.squareSimpleSendMessage(Tcustom.square, message, 'Your ID: ' + message._from);
+                botlib.squareSimpleSendMessage(message, 'Your ID: ' + message._from);
             }
 
             if (res.txt == 'speed') {
                 const curTime = (Date.now() / 1000);
-                botlib.squareSimpleSendMessage(Tcustom.square, message, 'Please wait...', 0, (err, success) => {
+                botlib.squareSimpleSendMessage(message, 'Please wait...', 0, (err, success) => {
                     const rtime = (Date.now() / 1000);
                     const xtime = rtime - curTime;
-                    botlib.squareSimpleSendMessage(Tcustom.square, message, xtime + ' seconds')
+                    botlib.squareSimpleSendMessage(message, xtime + ' seconds')
                 });
             }
 
             if (res.txt == 'creator') {
-                botlib.squareSendContact(Tcustom.square, message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
+                botlib.squareSendContact(message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
             }
 
             if (res.txt == 'time') {
                 let d = new Date();
                 let xmenit = d.getMinutes().toString().split("");
                 if (xmenit.length < 2) {
-                    botlib.squareSimpleSendMessage(Tcustom.square, message, d.getHours() + ":0" + d.getMinutes());
+                    botlib.squareSimpleSendMessage(message, d.getHours() + ":0" + d.getMinutes());
                 } else {
-                    botlib.squareSimpleSendMessage(Tcustom.square, message, d.getHours() + ":" + d.getMinutes());
+                    botlib.squareSimpleSendMessage(message, d.getHours() + ":" + d.getMinutes());
                 }
             }
 
@@ -339,6 +341,7 @@ lineLogin(LOGINType, (res) => {
     }
     options.headers['X-Line-Access'] = res.authToken;
     serviceConn('/SQS1', 'square', 'SquareService', (res) => {
+        botlib = new BotLib(Tcustom.square, config);
         console.info('> Success connected to square service');
         setInterval(() => {
             if (config.sync == '' || config.conToken == '') {
@@ -350,7 +353,7 @@ lineLogin(LOGINType, (res) => {
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
                     botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
-                }, Tcustom.square, sqChatMid, 0, '', '', 1, 1);
+                }, sqChatMid, 0, '', '', 1, 1);
             } else {
                 botlib.squareSingleChatPoll((err, success) => {
                     //console.info(err)
@@ -360,13 +363,13 @@ lineLogin(LOGINType, (res) => {
                     config.sync = success.syncToken;
                     config.conToken = success.continuationToken;
                     botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
-                }, Tcustom.square, sqChatMid, 0, config.sync, config.conToken, 1, 1);
+                }, sqChatMid, 0, config.sync, config.conToken, 1, 1);
             }
         }, 800);
     })
 });
 
-process.on('uncaughtException', function (err) {
-    console.info("Something make me cry \n"+err);
+process.on('uncaughtException', function(err) {
+    console.info("Something make me cry \n" + err);
 
 });
