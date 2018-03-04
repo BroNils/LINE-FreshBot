@@ -47,7 +47,7 @@ const config = {
     //X_LINE_APP: 'ANDROIDLITE\t1.9.4\tAndroid\t6.0.1'
     X_LINE_APP: 'DESKTOPWIN\t7.18.1\tFDLRCN\t11.2.5',
     ip: '127.0.0.1',
-    version: '3.2',
+    version: '4.0',
     repo: 'https://github.com/GoogleX133/LINE-SquareBot',
     raw_repo: 'https://raw.githubusercontent.com/GoogleX133/LINE-SquareBot/master/',
     port: 1337,
@@ -56,6 +56,7 @@ const config = {
     platform: whichPlatform,
     EMAIL_REGEX: /[^@]+@[^@]+\.[^@]+/,
     Headers: {
+        'X-Line-Application': 'DESKTOPWIN\t7.18.1\tFDLRCN\t11.2.5',
         'User-Agent': 'Android Mobile Line/7.18.1',
         'Connection': 'keep-alive'
     },
