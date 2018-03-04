@@ -1,6 +1,6 @@
 /*
 
-| [ LINE TalkBot - by GoogleX ]
+| [ LINE SquareBot - by GoogleX ]
 | 
 | Special thanks to:
 |  - StackoverFlow
@@ -24,7 +24,7 @@ console.info("\nNOTE : This project is made by @GoogleX !\n\
 ***Copyright belongs to the author***\n\n\n\n");
 
 /*Change This*/
-var LOGINType = 1; // 0 = CREDENTIAL, 1 = QRCODE, 2 = AuthToken #CHANGE YOUR LOGIN TYPE HERE
+var LOGINType = 2; // 0 = CREDENTIAL, 1 = QRCODE, 2 = AuthToken #CHANGE YOUR LOGIN TYPE HERE
 
 /* Const variable */
 
@@ -38,7 +38,7 @@ const request = require('request');
 const LineService = require('../thrift/TalkService.js');
 const jsonfile = require('jsonfile');
 const TTypes = require('../thrift/line_types');
-const botlib = require('../pkg/main');
+const BotLib = require('../pkg/BotLib');
 const PinVerifier = require('../pkg/pinVerifier');
 
 
@@ -60,6 +60,7 @@ var options = {
     path: config.LINE_HTTP_URL,
     https: true
 };
+var botlib = new BotLib('', config);
 
 /* Update Check */
 console.log('\nChecking update....')
@@ -126,7 +127,7 @@ function getQrLink(callback) {
     options.path = config.LINE_HTTP_URL;
     setTHttpClient(options, (xres) => {
         if (xres == "DONE") {
-            Tclient.getAuthQrcode(true, "GBOT", (err, result) => {
+            Tclient.getAuthQrcode(true, "SQBOT", (err, result) => {
                 // console.log('here')
                 //console.log(err)
                 const qrcodeUrl = `line://au/q/${result.verifier}`;
@@ -149,7 +150,7 @@ function qrLogin(xverifier, callback) {
                 if (xret == "DONE") {
                     reqx.type = 1;
                     reqx.verifier = verifiedQr;
-                    reqx.systemName = "GBOT";
+                    reqx.systemName = "SQBOT";
                     reqx.identityProvider = 1;
                     reqx.e2eeVersion = 0;
                     TauthService.loginZ(reqx, (err, success) => {
@@ -172,7 +173,8 @@ function credLogin(id, password, callback) {
     const pinVerifier = new PinVerifier(id, password);
     let provider = 1;
     setTHttpClient(options);
-    botlib.getRSAKeyInfo(provider, Tclient, (key, credentials) => {
+    botlib = new BotLib(Tclient, config)
+    botlib.getRSAKeyInfo(provider, (key, credentials) => {
         authConn(() => {
             const rsaCrypto = pinVerifier.getRSACrypto(credentials);
             reqx.type = 0;
@@ -181,7 +183,7 @@ function credLogin(id, password, callback) {
             reqx.password = rsaCrypto.credentials;
             reqx.keepLoggedIn = true;
             reqx.accessLocation = config.ip;
-            reqx.systemName = 'GBot';
+            reqx.systemName = 'SquareBot';
             reqx.e2eeVersion = 0;
             try {
                 TauthService.loginZ(reqx, (err, success) => {
@@ -209,7 +211,7 @@ function credLogin(id, password, callback) {
                                     options.path = config.LINE_POLL_URL;
                                     setTHttpClient(options);
                                     config.tokenn = success.authToken;
-                                    console.info('> AuthToken: ' + res.authToken);
+                                    console.info('> AuthToken: ' + success.authToken);
                                     botlib.checkLoginResultType(success.type, success);
                                     callback(success);
                                 })
@@ -285,7 +287,7 @@ function botKeyword(ops) {
             let txt = message.text.toLowerCase();
 
             if (txt == 'hi') {
-                botlib.talkSimpleSendMessage(Tcustom.talk, message, 'Halo !!')
+                botlib.talkSimpleSendMessage(message, 'Halo !!')
             }
         }
     })
@@ -300,6 +302,7 @@ lineLogin(LOGINType, (res) => {
     }
     options.headers['X-Line-Access'] = res.authToken;
     serviceConn('/S4', 'talk', 'TalkService', (res) => {
+        botlib = new BotLib(Tcustom.talk, config);
         console.info('> Success connected to talk service');
         Tcustom.talk.getLastOpRevision((err, success) => {
             config.revision = parseInt(success);
@@ -313,13 +316,13 @@ lineLogin(LOGINType, (res) => {
                     for (let key in success) {
                         botKeyword(success[key]);
                     }
-                }, Tcustom.talk, config.revision, 5)
+                }, config.revision, 5)
             }, 900);
         })
     })
 });
 
-process.on('uncaughtException', function (err) {
-    console.info("Something make me cry \n"+err);
+process.on('uncaughtException', function(err) {
+    console.info("Something make me cry \n" + err);
 
 });
