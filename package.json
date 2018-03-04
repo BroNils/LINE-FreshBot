@@ -18,6 +18,9 @@
   "author": "GoogleX",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.5.1",
+    "image-downloader": "^3.3.0",
+    "inquirer": "^5.1.0",
     "jsonfile": "^4.0.0",
     "mime": "^2.2.0",
     "node-bignumber": "^1.2.1",
@@ -29,6 +32,8 @@
     "thrift-http": "^1.0.1",
     "unirest": "^0.5.1",
     "utf8": "^3.0.0",
-    "util": "^0.10.3"
+    "util": "^0.10.3",
+    "webp-converter": "^2.1.6",
+    "xhr": "^2.4.1"
   }
 }
