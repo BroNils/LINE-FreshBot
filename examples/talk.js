@@ -24,7 +24,7 @@ console.info("\nNOTE : This project is made by @GoogleX !\n\
 ***Copyright belongs to the author***\n\n\n\n");
 
 /*Change This*/
-var LOGINType = 2; // 0 = CREDENTIAL, 1 = QRCODE, 2 = AuthToken #CHANGE YOUR LOGIN TYPE HERE
+var LOGINType = 1; // 0 = CREDENTIAL, 1 = QRCODE, 2 = AuthToken #CHANGE YOUR LOGIN TYPE HERE
 
 /* Const variable */
 
