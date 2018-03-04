@@ -39,7 +39,6 @@ const request = require('request');
 const LineService = require('./thrift/TalkService.js');
 const jsonfile = require('jsonfile');
 const TTypes = require('./thrift/line_types');
-const botlib = require('./pkg/main');
 const PinVerifier = require('./pkg/pinVerifier');
 const BotLib = require('./pkg/BotLib');
 
