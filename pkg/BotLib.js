@@ -171,7 +171,7 @@ class BotLib {
         }
         const options = {
             url: uri,
-            dest: __dirname + '../download/' + name
+            dest: __dirname + '/../download/' + name
         }
 
         dlimg.image(options).then(({
