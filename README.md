@@ -15,9 +15,9 @@ PAGES
     - [Windows](#windows-installation)
     - [Linux](#linux-installation)
     - [Termux](#linux-installation)
-    - [Setup](#setup)
+    - [Setup](#line-squarebot-setup)
 - [How to run](#how-to-run)
-- [How to get ChatMid](#how-to-get-chatmid)
+- [How to get ChatMid](#how-to-get-chatmid-for-square)
 
 
 ## What is LINE FreshBot ?
