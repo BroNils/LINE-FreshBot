@@ -114,13 +114,15 @@ function authConn(callback) {
 }
 
 function serviceConn(path, xcustom, tpath, callback) {
-    axc = true;
-    options.path = path;
-    setTHttpClient(options, (xres) => {
-        if (xres == "DONE") {
-            callback("DONE");
-        }
-    }, xcustom, tpath);
+    return new Promise((resolve,reject)=>{
+        axc = true;
+        options.path = path;
+        setTHttpClient(options, (xres) => {
+            if (xres == "DONE") {
+                resolve("DONE");
+            }
+        }, xcustom, tpath);
+    })
 }
 
 function getQrLink(callback) {
@@ -281,47 +283,45 @@ function lineLogin(type = 1, callback) {
 /* Edit your keyword here */
 
 function botKeyword(ops) {
-    botlib.getSquareMessage(ops, (res) => {
-        if (res.msg && res.msg !== 'undefined') {
-            let message = res.msg;
-            if (res.txt == 'help') {
-                botlib.squareSimpleSendMessage(message, '~~~~Keyword\n\n\
+    let res = botlib.getSquareMessage(ops);
+    if (res.msg && res.msg !== 'undefined') {
+        let message = res.msg;
+        if (res.txt == 'help') {
+            botlib.squareSimpleSendMessage(message, '~~~~Keyword\n\n\
 - creator\n\
 - help\n\
 - myid\n\
 - speed\n\
 - time');
-            }
-
-            if (res.txt == 'myid') {
-                botlib.squareSimpleSendMessage(message, 'Your ID: ' + message._from);
-            }
-
-            if (res.txt == 'speed') {
-                const curTime = (Date.now() / 1000);
-                botlib.squareSimpleSendMessage(message, 'Please wait...', 0, (err, success) => {
-                    const rtime = (Date.now() / 1000);
-                    const xtime = rtime - curTime;
-                    botlib.squareSimpleSendMessage(message, xtime + ' seconds')
-                });
-            }
-
-            if (res.txt == 'creator') {
-                botlib.squareSendContact(message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
-            }
-
-            if (res.txt == 'time') {
-                let d = new Date();
-                let xmenit = d.getMinutes().toString().split("");
-                if (xmenit.length < 2) {
-                    botlib.squareSimpleSendMessage(message, d.getHours() + ":0" + d.getMinutes());
-                } else {
-                    botlib.squareSimpleSendMessage(message, d.getHours() + ":" + d.getMinutes());
-                }
-            }
-
         }
-    })
+
+        if (res.txt == 'myid') {
+            await botlib.squareSimpleSendMessage(message, 'Your ID: ' + message._from);
+        }
+
+        if (res.txt == 'speed') {
+            const curTime = (Date.now() / 1000);
+            await botlib.squareSimpleSendMessage(message, 'Please wait...');
+            const rtime = (Date.now() / 1000);
+            const xtime = rtime - curTime;
+            await botlib.squareSimpleSendMessage(message, xtime + ' seconds');
+        }
+
+        if (res.txt == 'creator') {
+            await botlib.squareSendContact(message.to, 'u5ee3f8b1c2783990512a02c14d312c89');
+        }
+
+        if (res.txt == 'time') {
+            let d = new Date();
+            let xmenit = d.getMinutes().toString().split("");
+            if (xmenit.length < 2) {
+                await botlib.squareSimpleSendMessage(message, d.getHours() + ":0" + d.getMinutes());
+            } else {
+                await botlib.squareSimpleSendMessage(message, d.getHours() + ":" + d.getMinutes());
+            }
+        }
+
+    }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -333,39 +333,36 @@ botlib.restoreSquareRev((res) => {
     }
 }, sqChatMid);
 
-lineLogin(LOGINType, (res) => {
+lineLogin(LOGINType, async(res) => {
     if (res == 'FAIL') {
         console.info('> Login type invalid');
         return;
     }
     options.headers['X-Line-Access'] = res.authToken;
-    serviceConn('/SQS1', 'square', 'SquareService', (res) => {
-        botlib = new BotLib(Tcustom.square, config);
-        console.info('> Success connected to square service');
-        setInterval(() => {
-            if (config.sync == '' || config.conToken == '') {
-                botlib.squareSingleChatPoll((err, success) => {
-                    //console.info(err)
-                    if (err) throw err;
-                    //console.info(success.events[0].payload)
-                    botKeyword(success);
-                    config.sync = success.syncToken;
-                    config.conToken = success.continuationToken;
-                    botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
-                }, sqChatMid, 0, '', '', 1, 1);
-            } else {
-                botlib.squareSingleChatPoll((err, success) => {
-                    //console.info(err)
-                    if (err) throw err;
-                    //console.info(success.events[0].payload)
-                    botKeyword(success);
-                    config.sync = success.syncToken;
-                    config.conToken = success.continuationToken;
-                    botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
-                }, sqChatMid, 0, config.sync, config.conToken, 1, 1);
-            }
-        }, 800);
-    })
+    let res = await serviceConn('/SQS1', 'square', 'SquareService');
+    botlib = new BotLib(Tcustom.square, config);
+    console.info('> Success connected to square service');
+    while(true){
+        if (config.sync == '' || config.conToken == '') {
+            let success = botlib.squareSingleChatPoll('', sqChatMid, 0, '', '', 1, 1);
+            //console.info(err)
+            if(success[0]) throw err;
+            //console.info(success.events[0].payload)
+            botKeyword(success[1]);
+            config.sync = success[1].syncToken;
+            config.conToken = success[1].continuationToken;
+            botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
+        } else {
+            let success = botlib.squareSingleChatPoll('', sqChatMid, 0, config.sync, config.conToken, 1, 1);
+            //console.info(err)
+            if (success[0]) throw err;
+            //console.info(success.events[0].payload)
+            botKeyword(success[1]);
+            config.sync = success[1].syncToken;
+            config.conToken = success[1].continuationToken;
+            botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
+        }
+    }
 });
 
 process.on('uncaughtException', function(err) {
