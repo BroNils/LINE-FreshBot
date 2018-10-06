@@ -61,6 +61,11 @@ var options = {
     https: true
 };
 var botlib = new BotLib('', config);
+var linetemp = {
+    waiter: {'x':{isAwait: true,stage: 0, cmd: '', var: {}}}, 
+    cmdInfo: {},
+	varWaiter: {}
+};
 
 /* Update Check */
 console.log('\nChecking update....')
@@ -114,13 +119,15 @@ function authConn(callback) {
 }
 
 function serviceConn(path, xcustom, tpath, callback) {
-    axc = true;
-    options.path = path;
-    setTHttpClient(options, (xres) => {
-        if (xres == "DONE") {
-            callback("DONE");
-        }
-    }, xcustom, tpath);
+    return new Promise((resolve,reject)=>{
+        axc = true;
+        options.path = path;
+        setTHttpClient(options, (xres) => {
+            if (xres == "DONE") {
+                resolve("DONE");
+            }
+        }, xcustom, tpath);
+    })
 }
 
 function getQrLink(callback) {
@@ -278,48 +285,108 @@ function lineLogin(type = 1, callback) {
     }
 }
 
+/* Bot Action */
+async function botAction(ops){
+    if(ops.type == '13'){
+		console.info(ops.param1);
+        botlib.talkAcceptGroupInvitation(ops.param1);
+        //return;
+    }
+}
+
 /* Edit your keyword here */
 
 function botKeyword(ops) {
-    botlib.talkGetMessage(ops, (res) => {
-        if (res && res !== 'undefined') {
-            let message = res;
-            let txt = message.text.toLowerCase();
+    let res = await botlib.talkGetMessage(ops);
+    let message = res[0];
+    let sender = message._from;
+    linetemp.lastmsg = message;
+    let txt = (message.text !== 'undefined') ? message.text.toLowerCase() : '';
+    let keylist = [
+        'hi',
+        'speed',
+        'tts'
+    ];
+  
+    if (res[0] && res[0] !== 'undefined' && isNSend == '26' && message.text !== 'undefined') {
 
-            if (txt == 'hi') {
-                botlib.talkSimpleSendMessage(message, 'Halo !!')
+        if (txt == 'hi') {
+           await botlib.talkSimpleSendMessage(message, 'Halo !!')
+           return;
+        }
+
+        if (txt == 'speed'){
+            const curTime = (Date.now() / 1000);
+            await botlib.talkSimpleSendMessage(message, 'Please wait....')
+            const rtime = (Date.now() / 1000);
+            const xtime = rtime	- curTime;
+            await botlib.talkSimpleSendMessage(message, xtime+' seconds')
+            return;
+        }
+
+        if (txt == 'tts'){
+            if(await botlib.isAwait(linetemp, sender) == true){
+                linetemp.waiter[sender] = {};
+                await botlib.talkSimpleSendMessage(message, '[Error] Anda sebelumnya sudah men-trigger await cmd / keyword')
+                await botlib.talkSimpleSendMessage(message, "[Warning] Semua await pada uid anda kami reset !");
+            }else{
+                linetemp.waiter[sender] = {isAwait: true,stage: 0, cmd: 'tts', var: {}};
+                await botlib.talkSimpleSendMessage(message, 'Ketik / tuliskan text yang akan dijadikan suara')
+                return;
             }
         }
-    })
+
+        if(await botlib.waiterGetCmd(linetemp, sender) == 'tts'){
+            switch(await botlib.waiterGetStage(linetemp, sender)){
+                case 0:
+                    linetemp.waiter[sender].var = {text: message.text};
+                    linetemp.waiter[sender].stage = 1;
+                    await botlib.talkSimpleSendMessage(message, 'Masukan digit kode bahasa (language code ISO-639)');
+                break;
+                case 1:
+                    //linetemp.waiter[sender] = {isAwait: true,stage: 1, cmd: 'tts', var: {'text': message.text}};
+                    let foldername = await botlib.textToSpeech(await botlib.waiterGetVar(linetemp, sender, 'text'), message.text);
+                    let resup = await botlib.uploadToTalk(config.tokenn, message.to, foldername, 'audio');
+                    if(resup != 201){
+                        await botlib.talkSimpleSendMessage(message, '[Error] Wrong language code !');
+                        await botlib.talkSimpleSendMessage(message, '[Warning] Action / Cmd sebelumnya dibatalkan');
+                    }
+
+                    linetemp.waiter[sender] = {};
+                break;
+                default:
+                    await botlib.talkSimpleSendMessage(message, '[Error]');
+            }
+        }
+    }
 }
 
 /*---------------------------------------------------------------------------*/
 
-lineLogin(LOGINType, (res) => {
+lineLogin(LOGINType,async (res) => {
     if (res == 'FAIL') {
         console.info('> Login type invalid');
         return;
     }
     options.headers['X-Line-Access'] = res.authToken;
-    serviceConn('/S4', 'talk', 'TalkService', (res) => {
-        botlib = new BotLib(Tcustom.talk, config);
-        console.info('> Success connected to talk service');
-        Tcustom.talk.getLastOpRevision((err, success) => {
-            config.revision = parseInt(success);
-            setInterval(() => {
-                botlib.talkFetchOps((err, success) => {
-                    if (err) throw err;
+    await serviceConn('/S4', 'talk', 'TalkService');
+    botlib = new BotLib(Tcustom.talk, config);
+    console.info('> Success connected to talk service');
+    let rev = await Tcustom.talk.getLastOpRevision();
+    config.revision = parseInt(rev);
 
-                    if (parseInt(success[0].revision) != -1) {
-                        config.revision = parseInt(success[0].revision);
-                    }
-                    for (let key in success) {
-                        botKeyword(success[key]);
-                    }
-                }, config.revision, 5)
-            }, 900);
-        })
-    })
+    while(true){
+        let oops = await botlib.talkFetchOps(config.revision, 5);
+
+        if (parseInt(oops[0].revision) != -1 && oops[0].revision != config.revision) {
+            config.revision = parseInt(oops[0].revision);
+        }
+
+        for (let key in oops) {
+			botAction(oops[key]);
+            botKeyword(oops[key]);
+        }
+    }
 });
 
 process.on('uncaughtException', function(err) {
