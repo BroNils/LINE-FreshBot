@@ -296,7 +296,7 @@ async function botAction(ops){
 
 /* Edit your keyword here */
 
-function botKeyword(ops) {
+async function botKeyword(ops) {
     let res = await botlib.talkGetMessage(ops);
     let message = res[0];
     let sender = message._from;
