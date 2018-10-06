@@ -1,14 +1,14 @@
 {
-  "name": "square-bot",
-  "version": "4.1.0",
-  "description": "LINE Square Bot",
-  "main": "index.js",
+  "name": "fresh-bot",
+  "version": "1.0.0",
+  "description": "LINE Fresh Bot",
+  "main": "./examples/talk.js",
   "scripts": {
-    "start": "node ./index.js"
+    "start": "node ./examples/talk.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GoogleX133/LINE-SquareBot.git"
+    "url": "https://github.com/GoogleX133/LINE-FreshBot.git"
   },
   "keywords": [
     "line-bot",
