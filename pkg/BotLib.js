@@ -84,8 +84,50 @@ class BotLib {
         }
     }
 
-    str_pad_left(string, pad, length) {
-        return (new Array(length + 1).join(pad) + string).slice(-length);
+    oneTimeRegExec(str = '', re = new RegExp(), callback){
+        return new Promise((resolve)=>{
+            let res = str.match(re);
+            
+            if(this.isFunction(callback)) callback(res[1]);
+            resolve(res[1]);
+        });
+    }
+
+    str_pad_left(string, pad = '0', length = '2') {
+        return (new Array(length + 0).join(pad) + string).slice(-length);
+    }
+
+    isAwait(linetemp, uid){
+        return new Promise((resolve)=>{
+            if(linetemp.waiter.hasOwnProperty(uid)){
+                if(linetemp.waiter[uid].isAwait == true){resolve(true);}else{resolve(false);}
+            }else{
+                resolve(false);
+            }
+
+            resolve(false);
+        })
+    }
+
+    waiterGetStage(linetemp, uid){
+        return new Promise((resolve)=>{
+            resolve(linetemp.waiter[uid].stage);
+        })
+    }
+
+    waiterGetCmd(linetemp, uid){
+        return new Promise((resolve)=>{
+            if(linetemp.waiter.hasOwnProperty(uid)){
+                resolve(linetemp.waiter[uid].cmd);
+            }
+            resolve();
+        })
+    }
+
+    waiterGetVar(linetemp, uid, vor){
+        return new Promise((resolve)=>{
+            resolve(linetemp.waiter[uid].var[vor]);
+        })
     }
 
     checkUpdate() {
@@ -165,23 +207,25 @@ class BotLib {
         return result;
     }
 
-    downloadImage(uri, name, callback) {
-        if (!uri.match(/http/g)) {
-            callback('FAIL')
-        }
-        const options = {
-            url: uri,
-            dest: __dirname + '/../download/' + name
-        }
+    downloadImage(uri, name) {
+        return new Promise((resolve,reject)=>{
+            if (!uri.match(/http/g)) {
+                resolve('FAIL');
+            }
+            const options = {
+                url: uri,
+                dest: __dirname + '/../download/' + name
+            }
 
-        dlimg.image(options).then(({
-            filename,
-            image
-        }) => {
-            console.log('File saved to', filename)
-            callback(filename)
-        }).catch((err) => {
-            throw err
+            dlimg.image(options).then(({
+                filename,
+                image
+            }) => {
+                console.log('File saved to', filename)
+                resolve(filename);
+            }).catch((err) => {
+                reject(err);
+            })
         })
     }
 
@@ -221,6 +265,22 @@ class BotLib {
         let datax = fs.readFileSync(src).toString("base64");
         let cx = util.format("data:%s;base64,%s", mime.getType(src), datax);
         callback(cx);
+    }
+
+    intConvertion(interval, type = 'sec'){
+        switch(type){
+            case 'sec':
+                return Math.floor(interval / 60);
+            break;
+            case 'min':
+                return (interval - Math.floor(interval / 60) * 60);
+            break;
+            case 'hour':
+                return Math.floor(interval / 3600);
+            break;
+            default:
+                return;
+        }
     }
 
     animeSearch(paths, page = 5, callback) {
@@ -278,16 +338,24 @@ class BotLib {
     }
 
     textToSpeech(words, lang, callback) {
-        let namef = __dirname + this.config.FILE_DOWNLOAD_LOCATION + "/tts.mp3";
-        const options = {
-            url: `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(words)}&tl=${lang}&client=tw-ob&ttsspeed=0.24`,
-            headers: {
-                'Referer': 'http://translate.google.com/',
-                'User-Agent': 'stagefright/1.2 (Linux;Android 5.0)'
+        return new Promise((resolve,reject)=>{
+            let namef = __dirname + this.config.FILE_DOWNLOAD_LOCATION + "/tts.mp3";
+            const options = {
+                url: `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(words)}&tl=${lang}&client=tw-ob&ttsspeed=0.24`,
+                headers: {
+                    'Referer': 'http://translate.google.com/',
+                    'User-Agent': 'stagefright/1.2 (Linux;Android 5.0)'
+                }
             }
-        }
-        rp(options).pipe(fs.createWriteStream(namef)).on('close', () => {
-            callback(namef);
+            
+            rp(options).pipe(fs.createWriteStream(namef)).on('close', () => {
+
+                if(this.isFunction(callback)){
+                    callback(namef);
+                }else{
+                    resolve(namef);
+                }
+            })
         })
     }
 
@@ -327,38 +395,90 @@ class BotLib {
         })
     }
 
+    jooxPlaytime(playtime, type = 'sec'){
+        switch(type){
+            case 'sec':
+                return Math.floor(((playtime / 60) - Math.floor(playtime / 60)) * 60);
+            break;
+            case 'min':
+                return Math.floor((playtime / 60));
+            break;
+            case 'hour':
+                return Math.floor((playtime / 60) / 60);
+            break;
+            default:
+                return;
+        }
+    }
+
     getJooxLyric(songid, callback) {
-        unirest.get('http://api.joox.com/web-fcgi-bin/web_lyric?musicid=' + songid + '&lang=id&country=id').end((data) => {
-            this.ambilKata(data.body, "MusicJsonCallback(", ")", (res) => {
-                callback(JSON.parse(res))
-            });
+        return new Promise((resolve)=>{
+            unirest.get('http://api.joox.com/web-fcgi-bin/web_lyric?musicid=' + songid + '&lang=id&country=id').end((data) => {
+                this.ambilKata(data.body, "MusicJsonCallback(", ")", (res) => {
+                    if(typeof res == 'undefined') resolve();
+                    if(this.isFunction(callback)) {callback(JSON.parse(res)); return;}
+
+                    resolve(JSON.parse(res));
+                });
+            })
+        })
+    }
+
+    getJooxAlbumInfo(albumid, callback){
+        return new Promise((resolve)=>{
+            unirest.get('http://api.joox.com/web-fcgi-bin/web_get_albuminfo?country=id&lang=en&all=1&albumid='+albumid).end((data) => {
+                if(typeof data.body == 'undefined') resolve();
+                if(this.isFunction(callback)) {callback(JSON.parse(data.body)); return;}
+
+                resolve(JSON.parse(data.body));
+            })
         })
     }
 
     getJooxSongInfo(songid, callback) {
-        unirest.get('http://api.joox.com/web-fcgi-bin/web_get_songinfo?songid=' + songid + '&lang=id&country=id').end((data) => {
-            this.ambilKata(data.body, "MusicInfoCallback(", "\n)", (res) => {
-                callback(res)
-            });
+        return new Promise((resolve)=>{
+            unirest.get('http://api.joox.com/web-fcgi-bin/web_get_songinfo?songid=' + songid + '&lang=id&country=id').end((data) => {
+                this.ambilKata(data.body, "MusicInfoCallback(", "\n)", (res) => {
+                    if(typeof res == 'undefined') resolve();
+                    if(this.isFunction(callback)) {callback(JSON.parse(res)); return;}
+
+                    resolve(JSON.parse(res));
+                });
+            })
         })
     }
 
     getJooxSingerInfo(ids, start = 0, end = 29, callback) {
-        unirest.get('http://api.joox.com/web-fcgi-bin/web_album_singer?cmd=2&singerid=' + ids + '&sin=' + start + '&ein=' + end + '&lang=id&country=id').end((data) => {
-            callback(JSON.parse(data.body))
+        return new Promise((resolve)=>{
+            unirest.get('http://api.joox.com/web-fcgi-bin/web_album_singer?cmd=2&singerid=' + ids + '&sin=' + start + '&ein=' + end + '&lang=id&country=id').end((data) => {
+                if(typeof data.body == 'undefined') resolve();
+                if(this.isFunction(callback)) {callback(JSON.parse(data.body)); return;}
+
+                resolve(JSON.parse(data.body));
+            })
         })
     }
 
     searchJooxByCategories(query, type = 2, page = 1, start = 0, end = 29, callback) {
         // 2 = artist, 1 = album, 3 = playlist
-        unirest.get('http://api.joox.com/web-fcgi-bin/web_category_search?lang=id&country=id&type=' + type + '&search_input=' + query + '&pn=' + page + '&sin=' + start + '&ein=' + end).end((data) => {
-            callback(JSON.parse(data.body))
+        return new Promise((resolve)=>{
+            unirest.get('http://api.joox.com/web-fcgi-bin/web_category_search?lang=id&country=id&type=' + type + '&search_input=' + query + '&pn=' + page + '&sin=' + start + '&ein=' + end).end((data) => {
+                if(typeof data.body == 'undefined') resolve();
+                if(this.isFunction(callback)) {callback(JSON.parse(data.body)); return;}
+
+                resolve(JSON.parse(data.body));
+            })
         })
     }
 
     searchJoox(query, page = 1, start = 0, end = 29, callback) {
-        unirest.get('http://api.joox.com/web-fcgi-bin/web_search?lang=id&country=id&type=0&search_input=' + query + '&pn=' + page + '&sin=' + start + '&ein=' + end).end((data) => {
-            callback(JSON.parse(data.body))
+        return new Promise((resolve)=>{
+            unirest.get('http://api.joox.com/web-fcgi-bin/web_search?lang=id&country=id&type=0&search_input=' + query + /*'&pn=' + page +*/ '&sin=' + start + '&ein=' + end).end((data) => {
+                if(typeof data.body == 'undefined') resolve();
+                if(this.isFunction(callback)) {callback(JSON.parse(data.body)); return;}
+
+                resolve(JSON.parse(data.body));
+            })
         })
     }
 
@@ -368,35 +488,119 @@ class BotLib {
         })
     }
 
-    /* Square */
+    shortenURL(uri, callback){
+        return new Promise((resolve)=>{
+            unirest.get("http://tinyurl.com/api-create.php?url="+uri).end((response)=>{
+                if(this.isFunction(callback)) {callback(response.body); return;}
 
+                resolve(response.body);
+            })
+        })
+	}
+	
+	brainlyRelaceHTML(srt){
+		let back = srt;
+		back = back.replace(/<br \/>/g,"\n");
+		back = back.replace(/<em>/g,"");
+		back = back.replace(/<\/em>/g,"");
+		back = back.replace(/<strong>/g,"");
+		back = back.replace(/<\/strong>/g,"");
+		back = back.replace(/<span>/g,"");
+		back = back.replace(/<\/span>/g, "");
+		back = back.replace(/&lt;/g,"<");
+		back = back.replace(/&gt;/g,">");
+		back = back.replace(/&le;/g,"<=");
+        back = back.replace(/&ge;/g,">=");
+        back = back.replace(/<p>/g,"");
+        back = back.replace(/<\/p>/g,"");
+		
+		return back;
+	}
+	
+	brainlyResponStatuses(resp){
+		let stats = "Jawaban Biasa";
+		if(resp.is_confirmed){
+			stats = "Jawaban Terpercaya";
+		}else if(resp.is_excellent){
+			stats = "Jawaban Paling Cerdas";
+		}else if(resp.is_best){
+			stats = "Jawaban Terbaik";
+		}
+		
+		return stats;
+	}
+	
+	brainlySearch(query='', limit=10, callback){
+		unirest.get('https://brainly.co.id/api/28/api_tasks/suggester?limit='+limit+'&query='+query).end((data)=>{
+			callback(data.body)
+		})
+	}
+	
+	brainlyGetTaskInfo(id){
+        return new Promise((resolve)=>{
+            unirest.get('https://brainly.co.id/api/28/api_tasks/get_by_id?id='+id).end((data)=>{
+                resolve(data.body);
+            })
+        })
+	}
+	
+	brainlyGetResponse(id){
+        return new Promise((resolve)=>{
+            unirest.get('https://brainly.co.id/api/28/api_responses/get?id='+id).end((data)=>{
+			    resolve(data.body);
+            })
+        })
+	}
+	
+	brainlyGetAttachment(id){
+        return new Promise((resolve)=>{
+            unirest.get('https://brainly.co.id/api/28/api_attachments/get_by_id?id='+id).end((data)=>{
+			    resolve(data.body);
+            })
+        })
+    }
+
+    /* Square */
+    
     squareSingleChatPoll(callback, squareChatMid, subsId = 0, syncToken = '', continuationToken = '', limits = 1, direction = 2) {
-        this.fetchSquareChatEvents((err, success) => {
-            callback(err, success);
-            for (let key in success.events) {
-                this.squareGetOpType(success.events[key]);
-            }
-        }, squareChatMid, 0, syncToken, continuationToken, limits, direction);
+        return new Promise((resolve)=>{
+            this.fetchSquareChatEvents((err, success) => {
+                for (let key in success.events) {
+                    this.squareGetOpType(success.events[key]);
+                }
+                if(this.isFunction(callback)) {callback([err, success]); return;}
+
+                resolve([err, success]);
+            }, squareChatMid, 0, syncToken, continuationToken, limits, direction);
+        })
     }
 
     squarePoll(callback, conToken, syncToken, subsId = 0, limits = 1) {
-        let reqx = new TTypes.FetchMyEventsRequest();
-        reqx.limit = limits;
-        reqx.syncToken = syncToken;
-        reqx.continuationToken = conToken;
-        reqx.subscriptionId = subsId;
-        this.thrift.fetchMyEvents(reqx, (err, success) => {
-            callback(err, success);
-            for (let key in success.events) {
-                this.squareGetOpType(success.events[key]);
-            }
-        });
+        return new Promise((resolve)=>{
+            let reqx = new TTypes.FetchMyEventsRequest();
+            reqx.limit = limits;
+            reqx.syncToken = syncToken;
+            reqx.continuationToken = conToken;
+            reqx.subscriptionId = subsId;
+            this.thrift.fetchMyEvents(reqx, (err, success) => {
+                for (let key in success.events) {
+                    this.squareGetOpType(success.events[key]);
+                }
+                if(this.isFunction(callback)) {callback([err, success]); return;}
+
+                resolve([err, success]);
+            });
+        })
     }
 
     searchSquareV2(ticket, callback) {
-        this.findSquareByInvitationTicket((err, success) => {
-            callback(success)
-        }, ticket)
+        return new Promise((resolve)=>{
+            this.findSquareByInvitationTicket((err, success) => {
+                if(this.isFunction(callback)) {callback(success); return;}
+
+                resolve(success);
+            }, ticket)
+        })
     }
 
     isJoinedToSquare(squareMid, callback) {
@@ -421,87 +625,103 @@ class BotLib {
     }
 
     getSquareMessage(ops, callback) {
-        if (typeof ops.events[0] !== 'undefined') {
-            if (ops.events[0].type == 29) {
-                let xmsg = ops.events[0].payload.notificationMessage.squareMessage.message;
-                let sQmsg = ops.events[0].payload.notificationMessage.squareMessage;
-                const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
-                let xtxt = txt.toLowerCase();
-                let xdata = {
-                    sqmsg: sQmsg,
-                    msg: xmsg,
-                    text: txt,
-                    txt: xtxt
+        return new Promise((resolve)=>{
+            if (typeof ops.events[0] !== 'undefined') {
+                if (ops.events[0].type == 29) {
+                    let xmsg = ops.events[0].payload.notificationMessage.squareMessage.message;
+                    let sQmsg = ops.events[0].payload.notificationMessage.squareMessage;
+                    const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
+                    let xtxt = txt.toLowerCase();
+                    let xdata = {
+                        sqmsg: sQmsg,
+                        msg: xmsg,
+                        text: txt,
+                        txt: xtxt
+                    }
+                    if(this.isFunction(callback)) {callback(xdata); return;}
+
+                    resolve(xdata);
+                } else if (ops.events[0].type == 0) {
+                    let xmsg = ops.events[0].payload.receiveMessage.squareMessage.message;
+                    let sQmsg = ops.events[0].payload.receiveMessage.squareMessage;
+                    const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
+                    let xtxt = txt.toLowerCase();
+                    let xdata = {
+                        sqmsg: sQmsg,
+                        msg: xmsg,
+                        text: txt,
+                        txt: xtxt
+                    }
+                    if(this.isFunction(callback)) {callback(xdata); return;}
+
+                    resolve(xdata);
+                } else if (ops.events[0].type == 1) {
+                    let xmsg = ops.events[0].payload.sendMessage.squareMessage.message;
+                    let sQmsg = ops.events[0].payload.sendMessage.squareMessage;
+                    const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
+                    let xtxt = txt.toLowerCase();
+                    let xdata = {
+                        sqmsg: sQmsg,
+                        msg: xmsg,
+                        text: txt,
+                        txt: xtxt
+                    }
+                    if(this.isFunction(callback)) {callback(xdata); return;}
+
+                    resolve(xdata);
                 }
-                callback(xdata);
-            } else if (ops.events[0].type == 0) {
-                let xmsg = ops.events[0].payload.receiveMessage.squareMessage.message;
-                let sQmsg = ops.events[0].payload.receiveMessage.squareMessage;
-                const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
-                let xtxt = txt.toLowerCase();
-                let xdata = {
-                    sqmsg: sQmsg,
-                    msg: xmsg,
-                    text: txt,
-                    txt: xtxt
-                }
-                callback(xdata);
-            } else if (ops.events[0].type == 1) {
-                let xmsg = ops.events[0].payload.sendMessage.squareMessage.message;
-                let sQmsg = ops.events[0].payload.sendMessage.squareMessage;
-                const txt = (xmsg.text !== '' && xmsg.text != null) ? xmsg.text : '';
-                let xtxt = txt.toLowerCase();
-                let xdata = {
-                    sqmsg: sQmsg,
-                    msg: xmsg,
-                    text: txt,
-                    txt: xtxt
-                }
-                callback(xdata);
             }
-        }
+        })
     }
 
     squareSendMessage(callback, to, txt = '', contentType = 0, contentMetadata = {}, seq = 0) {
-        let reqx = new TTypes.SendMessageRequest();
-        let sQmsg = new TTypes.SquareMessage();
-        let message = new TTypes.Message();
-        message.text = txt;
-        message.to = to;
-        message.contentType = contentType;
-        message.contentMetadata = contentMetadata;
-        sQmsg.message = message;
-        sQmsg.fromType = 4;
-        //sQmsg.squareMessageRevision = 1;
-        reqx.reqSeq = 0;
-        reqx.squareChatMid = message.to;
-        reqx.squareMessage = sQmsg;
-        this.thrift.sendMessage(reqx, (err, success) => {
-            if (err) throw err;
-            //console.info(JSON.stringify(success))
-            if (this.isFunction(callback)) {
-                callback(err, success);
-            }
-        });
+        return new Promise((resolve)=>{
+            let reqx = new TTypes.SendMessageRequest();
+            let sQmsg = new TTypes.SquareMessage();
+            let message = new TTypes.Message();
+            message.text = txt;
+            message.to = to;
+            message.contentType = contentType;
+            message.contentMetadata = contentMetadata;
+            sQmsg.message = message;
+            sQmsg.fromType = 4;
+            //sQmsg.squareMessageRevision = 1;
+            reqx.reqSeq = 0;
+            reqx.squareChatMid = message.to;
+            reqx.squareMessage = sQmsg;
+            this.thrift.sendMessage(reqx, (err, success) => {
+                if (err) throw err;
+                //console.info(JSON.stringify(success))
+                if (this.isFunction(callback)) {
+                    callback([err, success]);
+                }
+
+                resolve([err, success]);
+            });
+        })
     }
 
     squareSimpleSendMessage(message, txt, seq = 0, callback) {
-        message.text = txt;
-        let reqx = new TTypes.SendMessageRequest();
-        let sQmsg = new TTypes.SquareMessage();
-        sQmsg.message = message;
-        sQmsg.fromType = 4;
-        //sQmsg.squareMessageRevision = 1;
-        reqx.reqSeq = 0;
-        reqx.squareChatMid = message.to;
-        reqx.squareMessage = sQmsg;
-        this.thrift.sendMessage(reqx, (err, success) => {
-            if (err) console.info(err);
-            //console.info(JSON.stringify(success))
-            if (this.isFunction(callback)) {
-                callback(err, success);
-            }
-        });
+        return new Promise((resolve)=>{
+            message.text = txt;
+            let reqx = new TTypes.SendMessageRequest();
+            let sQmsg = new TTypes.SquareMessage();
+            sQmsg.message = message;
+            sQmsg.fromType = 4;
+            //sQmsg.squareMessageRevision = 1;
+            reqx.reqSeq = 0;
+            reqx.squareChatMid = message.to;
+            reqx.squareMessage = sQmsg;
+            this.thrift.sendMessage(reqx, (err, success) => {
+                if (err) console.info(err);
+                //console.info(JSON.stringify(success))
+                if (this.isFunction(callback)) {
+                    callback([err, success]);
+                }
+
+                resolve([err, success]);
+            });
+        })
     }
 
     squareSendSticker(squareChatMid, packageId, stickerId) {
@@ -555,23 +775,27 @@ class BotLib {
         return this.thrift.destroyMessage(rq);
     }
 
-    searchSquareMembers(callback, squareMid, continuationToken = '', limit = 50) {
-        let rq = new TTypes.SearchSquareMembersRequest();
-        rq.squareMid = squareMid;
-        rq.searchOption = new TTypes.SquareMemberSearchOption();
-        rq.continuationToken = continuationToken;
-        rq.limit = limit;
+    searchSquareMembers(squareMid, continuationToken = '', limit = 50) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.SearchSquareMembersRequest();
+            rq.squareMid = squareMid;
+            rq.searchOption = new TTypes.SquareMemberSearchOption();
+            rq.continuationToken = continuationToken;
+            rq.limit = limit;
 
-        this.thrift.searchSquareMembers(rq, (err, success) => {
-            callback(err, success);
+            this.thrift.searchSquareMembers(rq, (err, success) => {
+                resolve([err, success]);
+            })
         })
     }
 
-    findSquareByInvitationTicket(callback, invitationTicket) {
-        let rq = new TTypes.FindSquareByInvitationTicketRequest();
-        rq.invitationTicket = invitationTicket;
-        this.thrift.findSquareByInvitationTicket(rq, (err, success) => {
-            callback(err, success);
+    findSquareByInvitationTicket(invitationTicket) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.FindSquareByInvitationTicketRequest();
+            rq.invitationTicket = invitationTicket;
+            this.thrift.findSquareByInvitationTicket(rq, (err, success) => {
+                resolve([err, success]);
+            })
         })
     }
 
@@ -621,26 +845,30 @@ class BotLib {
         return this.thrift.createSquareChat(rq);
     }
 
-    fetchSquareChatEvents(callback, squareChatMid, subscriptionId = 0, syncToken = '', continuationToken = '', limit = 50, direction = 2) {
-        let rq = new TTypes.FetchSquareChatEventsRequest();
-        rq.squareChatMid = squareChatMid;
-        rq.subscriptionId = subscriptionId;
-        rq.syncToken = syncToken;
-        rq.limit = limit;
-        rq.direction = direction;
-        this.thrift.fetchSquareChatEvents(rq, (err, success) => {
-            callback(err, success);
+    fetchSquareChatEvents(squareChatMid, subscriptionId = 0, syncToken = '', continuationToken = '', limit = 50, direction = 2) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.FetchSquareChatEventsRequest();
+            rq.squareChatMid = squareChatMid;
+            rq.subscriptionId = subscriptionId;
+            rq.syncToken = syncToken;
+            rq.limit = limit;
+            rq.direction = direction;
+            this.thrift.fetchSquareChatEvents(rq, (err, success) => {
+                resolve([err, success]);
+            })
         })
     }
 
-    fetchMyEvents(callback, subscriptionId = 0, syncToken = '', continuationToken = '', limit = 50) {
-        let rq = new TTypes.FetchMyEventsRequest();
-        rq.subscriptionId = subscriptionId;
-        rq.syncToken = syncToken;
-        rq.continuationToken = continuationToken;
-        rq.limit = limit;
-        this.thrift.fetchMyEvents(rq, (err, success) => {
-            callback(err, success);
+    fetchMyEvents(subscriptionId = 0, syncToken = '', continuationToken = '', limit = 50) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.FetchMyEventsRequest();
+            rq.subscriptionId = subscriptionId;
+            rq.syncToken = syncToken;
+            rq.continuationToken = continuationToken;
+            rq.limit = limit;
+            this.thrift.fetchMyEvents(rq, (err, success) => {
+                resolve([err, success]);
+            })
         })
     }
 
@@ -652,10 +880,12 @@ class BotLib {
     }
 
     getSquareAuthority(callback, squareMid) {
-        let rq = new TTypes.GetSquareAuthorityRequest();
-        rq.squareMid = squareMid;
-        this.thrift.getSquareAuthority(rq, (err, success) => {
-            callback(err, success);
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareAuthorityRequest();
+            rq.squareMid = squareMid;
+            this.thrift.getSquareAuthority(rq, (err, success) => {
+                resolve([err, success]);
+            })
         })
     }
 
@@ -674,31 +904,35 @@ class BotLib {
     }
 
     joinSquareChat(callback, squareChatMid) {
-        let rq = new TTypes.JoinSquareChatRequest();
-        rq.squareChatMid = squareChatMid;
-        this.thrift.joinSquareChat(rq, (err, success) => {
-            if (this.isFunction(callback)) {
-                callback(err, success)
-            } else {
-                return success;
-            }
-        });
+        return new Promise((resolve)=>{
+            let rq = new TTypes.JoinSquareChatRequest();
+            rq.squareChatMid = squareChatMid;
+            this.thrift.joinSquareChat(rq, (err, success) => {
+                if (this.isFunction(callback)) {
+                    callback([err, success])
+                } else {
+                    resolve([err, success]);
+                }
+            });
+        })
     }
 
     joinSquare(squareMid, displayName, profileImageObsHash = '', callback) {
-        let rq = new TTypes.JoinSquareRequest();
-        rq.squareMid = squareMid;
-        rq.member = new TTypes.SquareMember();
-        rq.member.squareMid = squareMid;
-        rq.member.displayName = displayName;
-        rq.member.profileImageObsHash = profileImageObsHash;
-        this.thrift.joinSquare(rq, (err, success) => {
-            if (this.isFunction(callback)) {
-                callback(err, success)
-            } else {
-                return success;
-            }
-        });
+        return new Promise((resolve)=>{
+            let rq = new TTypes.JoinSquareRequest();
+            rq.squareMid = squareMid;
+            rq.member = new TTypes.SquareMember();
+            rq.member.squareMid = squareMid;
+            rq.member.displayName = displayName;
+            rq.member.profileImageObsHash = profileImageObsHash;
+            this.thrift.joinSquare(rq, (err, success) => {
+                if (this.isFunction(callback)) {
+                    callback([err, success])
+                } else {
+                    resolve([err, success]);
+                }
+            });
+        })
     }
 
     inviteToSquare(squareMid, squareChatMid, invitees = ['']) {
@@ -716,81 +950,99 @@ class BotLib {
         return this.thrift.inviteToSquareChat(rq);
     }
 
-    getSquareMember(callback, squareMemberMid) {
-        let rq = new TTypes.GetSquareMemberRequest()
-        rq.squareMemberMid = squareMemberMid;
-        this.thrift.getSquareMember(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquareMember(squareMemberMid) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareMemberRequest()
+            rq.squareMemberMid = squareMemberMid;
+            this.thrift.getSquareMember(rq, (err, success) => {
+                callback([err, success])
+            });
+        })
     }
 
-    getSquareMembers(callback, mids = ['']) {
-        let rq = new TTypes.GetSquareMembersRequest();
-        rq.mids = mids;
-        this.thrift.getSquareMembers(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquareMembers(mids = ['']) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareMembersRequest();
+            rq.mids = mids;
+            this.thrift.getSquareMembers(rq, (err, success) => {
+                resolve([err, success])
+            });
+        })
     }
 
-    getSquareMemberRelation(callback, squareMid, targetSquareMemberMid) {
-        let rq = new TTypes.GetSquareMemberRelationRequest();
-        rq.squareMid = squareMid;
-        rq.targetSquareMemberMid = targetSquareMemberMid;
-        this.thrift.getSquareMemberRelation(rq, (err, success) => {
-            callback(err, success);
-        });
+    getSquareMemberRelation(squareMid, targetSquareMemberMid) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareMemberRelationRequest();
+            rq.squareMid = squareMid;
+            rq.targetSquareMemberMid = targetSquareMemberMid;
+            this.thrift.getSquareMemberRelation(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
-    getSquareMemberRelations(callback, state = 1, continuationToken = '', limit = 50) {
-        let rq = new TTypes.GetSquareMemberRelationsRequest();
-        rq.state = state; // 1 NONE, 2 BLOCKED
-        rq.continuationToken = continuationToken;
-        rq.limit = limit;
-        this.thrift.getSquareMemberRelations(rq, (err, success) => {
-            callback(err, success);
-        });
+    getSquareMemberRelations(state = 1, continuationToken = '', limit = 50) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareMemberRelationsRequest();
+            rq.state = state; // 1 NONE, 2 BLOCKED
+            rq.continuationToken = continuationToken;
+            rq.limit = limit;
+            this.thrift.getSquareMemberRelations(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
-    getSquareChatMembers(callback, squareChatMid, continuationToken = '', limit = 50) {
-        let rq = new TTypes.GetSquareChatMembersRequest();
-        rq.squareChatMid = squareChatMid;
-        rq.continuationToken = continuationToken;
-        rq.limit = limit;
-        this.thrift.getSquareChatMembers(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquareChatMembers(squareChatMid, continuationToken = '', limit = 50) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareChatMembersRequest();
+            rq.squareChatMid = squareChatMid;
+            rq.continuationToken = continuationToken;
+            rq.limit = limit;
+            this.thrift.getSquareChatMembers(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
-    getSquareChatStatus(callback, squareChatMid) {
-        let rq = new TTypes.GetSquareChatStatusRequest();
-        rq.squareChatMid = squareChatMid;
-        this.thrift.getSquareChatStatus(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquareChatStatus(squareChatMid) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareChatStatusRequest();
+            rq.squareChatMid = squareChatMid;
+            this.thrift.getSquareChatStatus(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
-    getSquareChat(callback, squareChatMid) {
-        let rq = new TTypes.GetSquareChatRequest();
-        rq.squareChatMid = squareChatMid;
-        this.thrift.getSquareChat(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquareChat(squareChatMid) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareChatRequest();
+            rq.squareChatMid = squareChatMid;
+            this.thrift.getSquareChat(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
-    getSquare(callback, mid) {
-        let rq = new TTypes.GetSquareRequest();
-        rq.mid = mid;
-        this.thrift.getSquare(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquare(mid) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareRequest();
+            rq.mid = mid;
+            this.thrift.getSquare(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
-    getSquareChatAnnouncements(callback, squareChatMid) {
-        let rq = new TTypes.GetSquareChatAnnouncementsRequest();
-        rq.squareChatMid = squareChatMid;
-        this.thrift.getSquareChatAnnouncements(rq, (err, success) => {
-            callback(err, success)
-        });
+    getSquareChatAnnouncements(squareChatMid) {
+        return new Promise((resolve)=>{
+            let rq = new TTypes.GetSquareChatAnnouncementsRequest();
+            rq.squareChatMid = squareChatMid;
+            this.thrift.getSquareChatAnnouncements(rq, (err, success) => {
+                resolve([err, success]);
+            });
+        })
     }
 
     deleteSquareChatAnnouncement(squareChatMid, announcementSeq = 0) {
@@ -891,27 +1143,87 @@ class BotLib {
         return this.thrift.removeSubscriptions(rq);
     }
 
+    uploadToSquare(authToken, squareChatMid, paths, type='image', reqseq=0, callback){
+        if(['image','gif','video','audio','file'].indexOf(type) != -1){
+			const fp = path.resolve(paths);
+            let data = fs.readFileSync(paths),contentType;
+            let datax = {}
+			datax.params = {
+				'name': 'a',
+				'ver': '1.0',
+                'oid': 'reqseq',
+				'reqseq': '1',
+                'tomid': squareChatMid,
+                'type': type
+            }
+            switch(type.toLowerCase()){
+				case 'image':
+                    contentType = 'image/jpeg';
+				break;
+				case 'gif':
+                    contentType = 'image/gif';
+				break;
+                case 'video':
+				    datax.params['duration'] = 60000;
+				    contentType = 'video/mp4';
+				break;
+				case 'audio':
+                    datax.params['duration'] = 0;
+                    contentType = 'audio/mp3';
+				break;
+				default:
+				    console.info('ERR_NO_UPLOAD_TYPE');
+				    return;
+			}
+			//console.info(range.toString());
+			//console.info(new Buffer(JSON.stringify(datax)).toString('base64'))
+			//console.info(JSON.stringify(params))
+            unirest.post(this.config.LINE_OBS+'/r/g2/m/reqseq')
+			.headers({
+				...this.config.Headers,
+				'X-Line-Access': authToken,
+                'Content-Length': data.length.toString(),
+                'x-obs-params': new Buffer(JSON.stringify(datax.params)).toString('base64'),
+			    'Content-Type': contentType
+		    })
+			.send(data)
+		     .end((response) => {
+              console.log(response.body);
+			  console.log(response.code);
+			  if(this.isFunction(callback)){
+				  callback(response.code);
+			  }
+             });
+		}
+	}
+
     /* Talk */
 
     talkSimpleSendMessage(message, txt = '', seq = 0) {
-        message.text = txt;
-        this.thrift.sendMessage(0, message, (err, success) => {
-            return success;
+        return new Promise((resolve)=>{
+            message.text = txt;
+            message.contentMetadata = {};
+            message.contentType = 0;
+            this.thrift.sendMessage(0, message, (err, success) => {
+                resolve(success);
+            })
         })
     }
 
     talkSendMessage(callback, txt, to, contentMetadata = {}, contentType = 0, seq = 0) {
-        let message = new TTypes.Message();
-        message.to = to;
-        message.text = txt;
-        message.contentMetadata = contentMetadata;
-        message.contentType = contentType;
-        this.thrift.sendMessage(0, message, (err, success) => {
-            if (this.isFunction(callback)) {
-                callback(err, success);
-            } else {
-                return success;
-            }
+        return new Promise((resolve)=>{
+            let message = new TTypes.Message();
+            message.to = to;
+            message.text = txt;
+            message.contentMetadata = contentMetadata;
+            message.contentType = contentType;
+            this.thrift.sendMessage(0, message, (err, success) => {
+                if (this.isFunction(callback)) {
+                    callback(err, success);
+                } else {
+                    resolve(success);
+                }
+            })
         })
     }
 
@@ -957,38 +1269,52 @@ class BotLib {
         return this.thrift.unsendMessage(0, messageId)
     }
 
-    talkFetchOps(callback, revision, count = 0) {
-        this.thrift.fetchOps(revision, count, 0, 0, (err, success) => {
-            for (let key in success) {
-                this.talkGetOpType(success[key])
-            }
-            if (this.isFunction(callback)) {
-                callback(err, success)
-            } else {
-                return success;
-            }
-        });
+    talkFetchOps(revision, count = 0, callback) {
+        return new Promise((resolve,reject) => {
+            this.thrift.fetchOps(revision, count, 0, 0, async (err, success) => {
+                if (err) reject(err);
+
+                for (let key in success) {
+                    await this.talkGetOpType(success[key])
+                }
+                if (this.isFunction(callback)) {
+                    callback(err, success)
+                } else {
+                    resolve(success);
+                }
+            });
+        })
     }
 
     talkGetOpType(operations) {
-        for (let key in TTypes.OpType) {
-            if (operations.type == TTypes.OpType[key]) {
-                if (operations.type != 0) {
-                    console.info(`[* ${operations.type} ] ${key} `);
+        return new Promise((resolve,reject)=>{
+            for (let key in TTypes.OpType) {
+                if (operations.type == TTypes.OpType[key]) {
+                    if (operations.type != 0) {
+                        console.info(`[* ${operations.type} ] ${key} `);
+                    }
+                    resolve();
                 }
             }
-        }
+        })
     }
 
     talkGetMessage(operation, callback) {
-        if (operation.type == 25 || operation.type == 26) {
-            const txt = (operation.message.text !== '' && operation.message.text != null) ? operation.message.text : '';
-            let message = new TTypes.Message(operation.message);
-            Object.assign(message, {
-                ct: operation.createdTime.toString()
-            });
-            callback(message)
-        }
+        return new Promise((resolve,reject) => {
+            if (operation.type == 25 || operation.type == 26) {
+                const txt = (operation.message.text !== '' && operation.message.text != null) ? operation.message.text : '';
+                let message = new TTypes.Message(operation.message);
+                Object.assign(message, {
+                    ct: operation.createdTime.toString()
+                });
+
+                if (this.isFunction(callback)) {
+                    callback(message)
+                } else {
+                    resolve([message, operation]);
+                }
+            }
+        })
     }
 
     talkGetContacts(mid = [], callback) {
@@ -1107,6 +1433,64 @@ class BotLib {
                 callback(err, success)
             } else {
                 return success
+            }
+        })
+    }
+
+    uploadToTalk(authToken, tomid, paths, type='image', reqseq=0, callback){
+        return new Promise((resolve)=>{
+            if(['image','gif','video','audio','file'].indexOf(type) != -1){
+                const fp = path.resolve(paths);
+                let data = fs.readFileSync(fp),contentType;
+                let datax = {}
+                datax.params = {
+                    'name': '0',
+                    'ver': '1.0',
+                    'oid': 'reqseq',
+                    'reqseq': '0',
+                    'tomid': tomid,
+                    'type': type
+                }
+                switch(type.toLowerCase()){
+                    case 'image':
+                        contentType = 'image/jpeg';
+                    break;
+                    case 'gif':
+                        contentType = 'image/gif';
+                    break;
+                    case 'video':
+                        datax.params['duration'] = 60000;
+                        contentType = 'video/mp4';
+                    break;
+                    case 'audio':
+                        datax.params['duration'] = 0;
+                        contentType = 'audio/mp3';
+                    break;
+                    default:
+                        console.info('ERR_NO_UPLOAD_TYPE');
+                        return;
+                }
+                //console.info(range.toString());
+                //console.info(new Buffer(JSON.stringify(datax)).toString('base64'))
+                //console.info(JSON.stringify(params))
+                unirest.post(this.config.LINE_OBS+'/r/talk/m/reqseq')
+                .headers({
+                    ...this.config.Headers,
+                    'X-Line-Access': authToken,
+                    'Content-Length': data.length.toString(),
+                    'x-obs-params': new Buffer(JSON.stringify(datax.params)).toString('base64'),
+                    'Content-Type': contentType
+                })
+                .send(data)
+                .end((response) => {
+                console.log(fp);
+                console.log(response.code);
+                if(this.isFunction(callback)){
+                    callback(response.code);
+                }else{
+                    resolve(response.code);
+                }
+                });
             }
         })
     }
