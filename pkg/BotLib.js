@@ -132,7 +132,7 @@ class BotLib {
 
     checkUpdate() {
         unirest.get(this.config.raw_repo + 'version.txt').end((data) => {
-            if (this.config.version < parseFloat(data.body) || this.config.version != parseFloat(data.body)) {
+            if (this.config.version != parseFloat(data.body)) {
                 console.info('There are new version of LINE SquareBot \n-> ' + this.config.repo + ' (' + parseFloat(data.body) + ')')
             } else {
                 console.info('You are currently using the latest version ! ^_^')
