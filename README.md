@@ -65,9 +65,13 @@ After you install with `npm i `, all you have to do is insert your squareChatMid
 
 ## How to run
 
-You can run with<br>
+You can run with (talk bot)<br>
 ```sh
 $ node ./examples/talk.js
+```
+<br>or (square bot)<br>
+```sh
+$ node ./examples/square.js
 ```
 
 ## How to get ChatMid (For Square)
