@@ -344,7 +344,7 @@ lineLogin(LOGINType, async(res) => {
     console.info('> Success connected to square service');
     while(true){
         if (config.sync == '' || config.conToken == '') {
-            let success = botlib.squareSingleChatPoll('', sqChatMid, 0, '', '', 1, 1);
+            let success = await botlib.squareSingleChatPoll('', sqChatMid, 0, '', '', 1, 1);
             //console.info(err)
             if(success[0]) throw err;
             //console.info(success.events[0].payload)
@@ -353,7 +353,7 @@ lineLogin(LOGINType, async(res) => {
             config.conToken = success[1].continuationToken;
             botlib.saveSquareRev(sqChatMid, config.sync, config.conToken);
         } else {
-            let success = botlib.squareSingleChatPoll('', sqChatMid, 0, config.sync, config.conToken, 1, 1);
+            let success = await botlib.squareSingleChatPoll('', sqChatMid, 0, config.sync, config.conToken, 1, 1);
             //console.info(err)
             if (success[0]) throw err;
             //console.info(success.events[0].payload)
